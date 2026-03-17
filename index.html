@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEU Library Login</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+    <div class="login-container">
+        <img src="https://neu.edu.ph/main/assets/images/NEU_Logo.png" alt="NEU Logo" style="width: 100px;">
+        <h1>Library Visitor Log</h1>
+        <p>Please sign in with your NEU email</p>
+        
+        <div id="g_id_onload"
+             data-client_id="190984431112-d575e8s1q36upjf1lsfupok2161q1bnm.apps.googleusercontent.com"
+             data-callback="handleCredentialResponse">
+        </div>
+        <div class="g_id_signin" data-type="standard"></div>
+    </div>
+
+    <script>
+        function handleCredentialResponse(response) {
+            console.log("Logged in!");
+            // Later we will add: if email == jcesperanza@neu.edu.ph -> go to admin.html
+            window.location.href = "visitor_form.html";
+        }
+    </script>
+</body>
+</html>
