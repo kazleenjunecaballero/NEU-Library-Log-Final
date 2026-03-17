@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>NEU Library Check-in</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="formSection">
+        <h1>Library Check-in</h1>
+        <form id="visitForm">
+            <label>Purpose of Visit:</label>
+            <select id="reason">
+                <option value="Reading">Reading</option>
+                <option value="Research">Research</option>
+                <option value="Computer">Computer Use</option>
+            </select>
+            <br><br>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <div id="welcomeMessage" style="display: none; text-align: center;">
+        <h1 style="color: #cc0000;">Welcome to NEU Library!</h1>
+        <p>Your visit has been recorded.</p>
+    </div>
+
+    <script>
+        document.getElementById('visitForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            document.getElementById('formSection').style.display = 'none';
+            document.getElementById('welcomeMessage').style.display = 'block';
+        });
+    </script>
+</body>
+</html>
