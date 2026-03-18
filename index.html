@@ -55,7 +55,7 @@
                 window.location.href = "visitor_form.html";
             } 
             else {
-                alert("ACCESS DENIED!\n\n'" + email + "' is not a valid student format.\n\nPlease use your official firstname.lastname@neu.edu.ph account.");
+                alert("ACCESS DENIED!\n\n'" + email + "' is not a valid NEU account.\n\nPlease use your official NEU account.");
                 document.getElementById("userEmail").value = "";
                 if(window.google) google.accounts.id.disableAutoSelect();
             }
