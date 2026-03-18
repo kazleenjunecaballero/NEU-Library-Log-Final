@@ -2,38 +2,50 @@ body {
     background-image: url('background.jpg');
     background-size: cover;
     background-position: center;
+    background-attachment: fixed;
     height: 100vh;
     margin: 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-family: Arial, sans-serif;
+    font-family: 'Segoe UI', Arial, sans-serif;
 }
 
-.login-card {
-    background: rgba(255, 255, 255, 0.9); /* White box with slight transparency */
-    padding: 40px;
+/* This is the white box that makes text readable */
+.form-container, .login-card {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 30px;
     border-radius: 15px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     text-align: center;
-    width: 350px;
+    width: 380px;
 }
 
 .neu-logo {
     width: 100px;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
 }
 
-h1 {
-    color: #cc0000;
-    font-size: 24px;
-    margin-bottom: 10px;
-}
+h1 { color: #cc0000; margin-bottom: 20px; }
 
-.input-group input {
-    width: 90%;
+label { display: block; text-align: left; font-weight: bold; margin-top: 15px; }
+
+select, input {
+    width: 100%;
     padding: 10px;
-    margin-bottom: 20px;
+    margin-top: 5px;
     border: 1px solid #ccc;
     border-radius: 5px;
+}
+
+button {
+    background: #cc0000;
+    color: white;
+    border: none;
+    padding: 12px;
+    width: 100%;
+    border-radius: 5px;
+    margin-top: 25px;
+    cursor: pointer;
+    font-weight: bold;
 }

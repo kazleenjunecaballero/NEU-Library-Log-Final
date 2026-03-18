@@ -41,15 +41,22 @@
     <div class="form-container" id="welcomeMessage" style="display: none;">
         <h1 style="color: #d90429;">Welcome to NEU Library!</h1>
         <p style="font-size: 1.1rem; margin: 20px 0;">Your visit has been successfully recorded in the digital log.</p>
-        <button onclick="window.location.reload()" style="background-color: #333;">New Check-in</button>
+        <button onclick="window.location.reload()" style="background-color: #333; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">New Check-in</button>
     </div>
 
     <script>
         document.getElementById('visitForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // In the next step, we will add the code here to 
-            // actually save these choices to your database!
+            // This is where the student data is captured
+            const visitData = {
+                reason: document.getElementById('reason').value,
+                college: document.getElementById('college').value,
+                isEmployee: document.getElementById('isEmployee').checked,
+                time: new Date().toLocaleString()
+            };
+            
+            console.log("Saving student visit:", visitData);
             
             document.getElementById('formSection').style.display = 'none';
             document.getElementById('welcomeMessage').style.display = 'block';
