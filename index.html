@@ -26,48 +26,49 @@
     </div>
 
     <script>
-        // Prototype Magic: Hit Enter to log in instantly without a password
         document.getElementById("userEmail").addEventListener("keypress", function(event) {
             if (event.key === "Enter") {
                 event.preventDefault();
                 const typedEmail = document.getElementById("userEmail").value.trim().toLowerCase();
-                
-                // Use the same logic for the typed email
                 processLogin(typedEmail);
             }
         });
 
-        // This handles the REAL Google Login button
         function handleCredentialResponse(response) {
             const responsePayload = decodeJwtResponse(response.credential);
             processLogin(responsePayload.email);
         }
 
-        // ONE central place for login logic to avoid mistakes
         function processLogin(email) {
             if (!email) {
                 alert("Please enter an email address.");
                 return;
             }
 
+            // Strict Pattern: looks for letters, then a DOT, then more letters @neu.edu.ph
+            const neuStudentPattern = /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@neu\.edu\.ph$/;
+            
+            // Check if it contains at least one dot before the @ symbol
+            const hasDot = email.split('@')[0].includes('.');
+
             // 1. Admin/Professor Check
             if (email === 'jcesperanza@neu.edu.ph') {
                 alert("Welcome, Professor! Redirecting to Admin Dashboard...");
                 window.location.href = "admin.html";
             } 
-            // 2. Student NEU Check
-            else if (email.endsWith('@neu.edu.ph')) {
-                alert("NEU Account Verified. Redirecting to Check-in...");
+            // 2. Strict Student NEU Check (Must have a dot in the name)
+            else if (email.endsWith('@neu.edu.ph') && hasDot) {
+                alert("NEU Account Verified: " + email);
                 window.location.href = "visitor_form.html";
             } 
-            // 3. Rejection logic (The "404" style error)
+            // 3. Rejection logic
             else {
-                alert("ACCESS DENIED!\n\n'" + email + "' is not a valid NEU account. Only NEU emails can access the Library Log.");
+                alert("ACCESS DENIED!\n\n'" + email + "' is not a valid student format.\n\nPlease use your official firstname.lastname@neu.edu.ph account.");
+                document.getElementById("userEmail").value = ""; // Clear the bad input
                 if(window.google) google.accounts.id.disableAutoSelect();
             }
         }
 
-        // Keep this! It's the important code that reads the Google Data
         function decodeJwtResponse(token) {
             var base64Url = token.split('.')[1];
             var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
