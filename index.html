@@ -10,14 +10,11 @@
 <body>
     <div class="login-card">
         <img src="New_Era_University.svg.png" alt="NEU Logo" class="neu-logo" style="width: 100px; display: block; margin: 0 auto 20px auto;">
-        
         <h1>Library Visitor Log</h1>
         <p>Please sign in with your NEU email</p>
-        
         <div class="input-group">
             <input type="email" id="userEmail" placeholder="Enter your NEU email">
         </div>
-
         <div id="g_id_onload"
              data-client_id="190984431112-d575e8s1q36upjf1lsfupok2161q1bnm.apps.googleusercontent.com"
              data-callback="handleCredentialResponse">
@@ -45,26 +42,21 @@
                 return;
             }
 
-            // Strict Pattern: looks for letters, then a DOT, then more letters @neu.edu.ph
-            const neuStudentPattern = /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@neu\.edu\.ph$/;
-            
-            // Check if it contains at least one dot before the @ symbol
             const hasDot = email.split('@')[0].includes('.');
 
-            // 1. Admin/Professor Check
             if (email === 'jcesperanza@neu.edu.ph') {
                 alert("Welcome, Professor! Redirecting to Admin Dashboard...");
                 window.location.href = "admin.html";
             } 
-            // 2. Strict Student NEU Check (Must have a dot in the name)
             else if (email.endsWith('@neu.edu.ph') && hasDot) {
+                // Save email to local storage so visitor_form.html can use it
+                localStorage.setItem("userEmail", email);
                 alert("NEU Account Verified: " + email);
                 window.location.href = "visitor_form.html";
             } 
-            // 3. Rejection logic
             else {
                 alert("ACCESS DENIED!\n\n'" + email + "' is not a valid student format.\n\nPlease use your official firstname.lastname@neu.edu.ph account.");
-                document.getElementById("userEmail").value = ""; // Clear the bad input
+                document.getElementById("userEmail").value = "";
                 if(window.google) google.accounts.id.disableAutoSelect();
             }
         }

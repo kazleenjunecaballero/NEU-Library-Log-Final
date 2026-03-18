@@ -7,7 +7,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
-        /* Professional Table Theme */
         #visitorTable {
             width: 100%;
             border-collapse: collapse;
@@ -16,44 +15,36 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             border-radius: 8px;
             overflow: hidden;
-            border: none;
         }
-        #visitorTable thead {
-            background-color: #cc0000;
-            color: white;
+        #visitorTable thead { background-color: #cc0000; color: white; }
+        #visitorTable th { padding: 15px; text-transform: uppercase; font-size: 13px; }
+        #visitorTable td { padding: 12px 15px; border-bottom: 1px solid #eee; font-size: 14px; }
+        #visitorTable tr:hover { background-color: #f9f9f9; }
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; background: #e9ecef; }
+        
+        /* Search Bar Styling */
+        .search-container {
+            margin-bottom: 20px;
+            width: 100%;
         }
-        #visitorTable th {
-            padding: 15px;
-            text-transform: uppercase;
-            font-size: 13px;
-            letter-spacing: 1px;
-        }
-        #visitorTable td {
-            padding: 12px 15px;
-            border-bottom: 1px solid #eee;
-            color: #444;
+        #searchInput {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #eee;
+            border-radius: 8px;
             font-size: 14px;
+            outline: none;
+            transition: 0.3s;
         }
-        #visitorTable tr:hover {
-            background-color: #f9f9f9;
-        }
-        .status-badge {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: bold;
-            background: #e9ecef;
-            color: #495057;
-        }
+        #searchInput:focus { border-color: #cc0000; }
     </style>
 </head>
 <body style="flex-direction: column; padding: 40px 0;">
-    
     <div class="admin-container" id="adminContent" style="background: rgba(255,255,255,0.98); padding: 30px; border-radius: 15px; width: 95%; max-width: 1100px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #f2f2f2; padding-bottom: 15px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <div>
                 <h1 style="margin: 0; color: #cc0000; font-size: 24px;">Library Visitor Records</h1>
-                <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">Real-time management of library entries</p>
+                <p style="color: #666; font-size: 14px;">Real-time management of library entries</p>
             </div>
             <div>
                 <button onclick="downloadPDF()" style="background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-right: 10px;">Export PDF</button>
@@ -61,17 +52,21 @@
             </div>
         </div>
 
+        <div class="search-container">
+            <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Search by email, college, or purpose...">
+        </div>
+
         <table id="visitorTable">
             <thead>
                 <tr>
                     <th>Designation</th>
-                    <th>College / Department</th>
-                    <th>Reason for Visit</th>
+                    <th>Email Address</th>
+                    <th>College</th>
+                    <th>Purpose</th>
                     <th>Date & Time</th>
                 </tr>
             </thead>
-            <tbody id="visitorTableBody">
-                </tbody>
+            <tbody id="visitorTableBody"></tbody>
         </table>
     </div>
 
@@ -81,39 +76,37 @@
                 const response = await fetch('/api/visitors');
                 const data = await response.json();
                 const tableBody = document.getElementById('visitorTableBody');
-                
                 tableBody.innerHTML = ''; 
                 
                 data.forEach(visitor => {
                     const row = `<tr>
                         <td><span class="status-badge">${visitor.isEmployee ? 'STAFF' : 'STUDENT'}</span></td>
-                        <td><strong>${visitor.college}</strong></td>
+                        <td><strong>${visitor.email || 'N/A'}</strong></td>
+                        <td>${visitor.college}</td>
                         <td>${visitor.reason}</td>
                         <td style="color: #888;">${visitor.time}</td>
                     </tr>`;
                     tableBody.insertAdjacentHTML('beforeend', row);
                 });
-            } catch (err) {
-                console.error("Failed to load visitor data:", err);
+            } catch (err) { console.error("Failed to load visitor data:", err); }
+        }
+
+        function filterTable() {
+            const input = document.getElementById("searchInput");
+            const filter = input.value.toUpperCase();
+            const tr = document.getElementById("visitorTableBody").getElementsByTagName("tr");
+
+            for (let i = 0; i < tr.length; i++) {
+                const textContent = tr[i].textContent || tr[i].innerText;
+                tr[i].style.display = textContent.toUpperCase().indexOf(filter) > -1 ? "" : "none";
             }
         }
 
         function downloadPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            doc.setFontSize(18);
-            doc.setTextColor(204, 0, 0);
             doc.text("NEU Library Visitor Log Report", 14, 15);
-            doc.setFontSize(10);
-            doc.setTextColor(100);
-            doc.text("Generated on: " + new Date().toLocaleString(), 14, 22);
-            
-            doc.autoTable({ 
-                html: '#visitorTable', 
-                margin: { top: 30 },
-                headStyles: { fillColor: [204, 0, 0] },
-                alternateRowStyles: { fillColor: [245, 245, 245] }
-            });
+            doc.autoTable({ html: '#visitorTable', margin: { top: 25 } });
             doc.save("NEU_Library_Log.pdf");
         }
 
