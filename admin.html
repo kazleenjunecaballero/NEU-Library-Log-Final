@@ -1,24 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Admin Dashboard</title>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard - NEU Library</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Library Statistics</h1>
-    <div class="dashboard-cards">
-        <div class="card">
-            <h3>Today's Visitors</h3>
-            <p id="dailyCount">0</p>
-        </div>
-        <div class="card">
-            <h3>Weekly Total</h3>
-            <p id="weeklyCount">0</p>
-        </div>
-        <div class="card">
-            <h3>Monthly Total</h3>
-            <p id="monthlyCount">0</p>
-        </div>
+    <div class="admin-container" style="background: white; padding: 20px; border-radius: 10px; width: 80%;">
+        <h1>Visitor Log Records</h1>
+        <table border="1" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>College</th>
+                    <th>Purpose</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody id="visitorTableBody">
+                </tbody>
+        </table>
     </div>
 </body>
 </html>

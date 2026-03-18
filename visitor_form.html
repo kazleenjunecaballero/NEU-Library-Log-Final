@@ -1,42 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NEU Library Check-in</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="formSection">
+    <div class="form-container" id="formSection">
+        <img src="https://neu.edu.ph/main/assets/images/NEU_Logo.png" alt="NEU Logo" style="width: 80px; margin-bottom: 10px;">
         <h1>Library Check-in</h1>
+        
         <form id="visitForm">
             <label>Purpose of Visit:</label>
-            <select id="reason">
+            <select id="reason" required>
                 <option value="Reading">Reading</option>
                 <option value="Research">Research</option>
                 <option value="Computer">Computer Use</option>
+                <option value="Borrowing/Returning">Borrowing/Returning Books</option>
             </select>
-            <br><br>
-            <button type="submit">Submit</button>
+
+            <label>College:</label>
+            <select id="college" required>
+                <option value="CICS">CICS</option>
+                <option value="CBA">CBA</option>
+                <option value="CAS">CAS</option>
+                <option value="CED">CED</option>
+                <option value="COE">COE</option>
+            </select>
+
+            <label>Are you an employee?</label>
+            <div style="text-align: left; margin: 10px 0;">
+                <input type="checkbox" id="isEmployee"> <span style="font-size: 14px;">Yes, I am a NEU Employee</span>
+            </div>
+
+            <button type="submit">Submit Visit</button>
         </form>
-        <label>College:</label>
-<select id="college">
-    <option value="CICS">CICS</option>
-    <option value="CBA">CBA</option>
-    <option value="CAS">CAS</option>
-</select>
-<br><br>
-<label>Are you an employee?</label>
-<input type="checkbox" id="isEmployee"> Yes
-<br><br>
     </div>
 
-    <div id="welcomeMessage" style="display: none; text-align: center;">
-        <h1 style="color: #cc0000;">Welcome to NEU Library!</h1>
-        <p>Your visit has been recorded.</p>
+    <div class="form-container" id="welcomeMessage" style="display: none;">
+        <h1 style="color: #d90429;">Welcome to NEU Library!</h1>
+        <p style="font-size: 1.1rem; margin: 20px 0;">Your visit has been successfully recorded in the digital log.</p>
+        <button onclick="window.location.reload()" style="background-color: #333;">New Check-in</button>
     </div>
 
     <script>
         document.getElementById('visitForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            
+            // In the next step, we will add the code here to 
+            // actually save these choices to your database!
+            
             document.getElementById('formSection').style.display = 'none';
             document.getElementById('welcomeMessage').style.display = 'block';
         });
