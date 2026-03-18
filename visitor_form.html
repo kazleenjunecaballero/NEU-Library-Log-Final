@@ -8,7 +8,8 @@
 </head>
 <body>
     <div class="form-container" id="formSection">
-        <img src="https://neu.edu.ph/main/assets/images/NEU_Logo.png" alt="NEU Logo" style="width: 80px; margin-bottom: 10px;">
+        <img src="https://neu.edu.ph/main/assets/images/NEU_Logo.png" alt="NEU Logo" style="width: 100px; margin-bottom: 20px;">
+        
         <h1>Library Check-in</h1>
         
         <form id="visitForm">
@@ -29,12 +30,7 @@
                 <option value="COE">COE</option>
             </select>
 
-            <label>Are you an employee?</label>
-            <div style="text-align: left; margin: 10px 0;">
-                <input type="checkbox" id="isEmployee"> <span style="font-size: 14px;">Yes, I am a NEU Employee</span>
-            </div>
-
-            <button type="submit">Submit Visit</button>
+            <button type="submit" style="background-color: #cc0000; color: white; border: none; padding: 12px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 20px;">Submit Visit</button>
         </form>
     </div>
 
@@ -48,18 +44,26 @@
         document.getElementById('visitForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // This is where the student data is captured
             const visitData = {
                 reason: document.getElementById('reason').value,
                 college: document.getElementById('college').value,
-                isEmployee: document.getElementById('isEmployee').checked,
+                // We send 'false' since it's only for students now
+                isEmployee: false,
                 time: new Date().toLocaleString()
             };
             
-            console.log("Saving student visit:", visitData);
-            
-            document.getElementById('formSection').style.display = 'none';
-            document.getElementById('welcomeMessage').style.display = 'block';
+            fetch('/api/visitors', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(visitData)
+            })
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById('formSection').style.display = 'none';
+                    document.getElementById('welcomeMessage').style.display = 'block';
+                }
+            })
+            .catch(error => console.error("Error:", error));
         });
     </script>
 </body>

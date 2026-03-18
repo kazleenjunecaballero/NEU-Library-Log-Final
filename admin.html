@@ -4,22 +4,69 @@
     <meta charset="UTF-8">
     <title>Admin Dashboard - NEU Library</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 </head>
-<body>
-    <div class="admin-container" style="background: white; padding: 20px; border-radius: 10px; width: 80%;">
-        <h1>Visitor Log Records</h1>
-        <table border="1" style="width: 100%; border-collapse: collapse;">
-            <thead>
+<body style="flex-direction: column; gap: 20px;">
+    
+    <div class="admin-container" id="adminContent" style="background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 1000px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h1 style="margin: 0; color: #cc0000;">Visitor Log Records</h1>
+            <div>
+                <button onclick="downloadPDF()" style="background: #28a745; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">Download PDF</button>
+                <button onclick="window.location.href='index.html'" style="background: #333; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer;">Logout</button>
+            </div>
+        </div>
+
+        <table id="visitorTable" border="1" style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead style="background-color: #f2f2f2;">
                 <tr>
-                    <th>Name</th>
-                    <th>College</th>
-                    <th>Purpose</th>
-                    <th>Time</th>
+                    <th style="padding: 12px;">Type</th>
+                    <th style="padding: 12px;">College</th>
+                    <th style="padding: 12px;">Purpose</th>
+                    <th style="padding: 12px;">Time</th>
                 </tr>
             </thead>
             <tbody id="visitorTableBody">
                 </tbody>
         </table>
     </div>
+
+    <script>
+        // 1. Pull data from the server
+        async function loadVisitors() {
+            try {
+                const response = await fetch('/api/visitors');
+                const data = await response.json();
+                const tableBody = document.getElementById('visitorTableBody');
+                
+                tableBody.innerHTML = ''; 
+                
+                data.forEach(visitor => {
+                    const row = `<tr>
+                        <td style="padding: 10px;">${visitor.isEmployee ? 'Staff' : 'Student'}</td>
+                        <td style="padding: 10px;">${visitor.college}</td>
+                        <td style="padding: 10px;">${visitor.reason}</td>
+                        <td style="padding: 10px;">${visitor.time}</td>
+                    </tr>`;
+                    tableBody.insertAdjacentHTML('beforeend', row);
+                });
+            } catch (err) {
+                console.error("Failed to load visitor data:", err);
+            }
+        }
+
+        // 2. Function to generate the PDF Report
+        function downloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text("NEU Library Visitor Log Report", 14, 15);
+            doc.autoTable({ html: '#visitorTable', margin: { top: 25 } });
+            doc.save("NEU_Library_Log.pdf");
+        }
+
+        // Load data on start
+        loadVisitors();
+    </script>
 </body>
 </html>
