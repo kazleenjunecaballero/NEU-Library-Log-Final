@@ -11,7 +11,29 @@ body {
     font-family: 'Segoe UI', Arial, sans-serif;
 }
 
-/* This is the white box that makes text readable */
+/* Updated Logout Button Styling */
+.logout-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: #cc0000; /* Matching the NEU Red */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: 0.3s;
+    width: auto; /* Overrides the general button width */
+    margin-top: 0; /* Overrides the general button margin */
+}
+
+.logout-btn:hover {
+    background: #990000;
+}
+
 .form-container, .login-card {
     background: rgba(255, 255, 255, 0.95);
     padding: 30px;
@@ -36,6 +58,7 @@ select, input {
     margin-top: 5px;
     border: 1px solid #ccc;
     border-radius: 5px;
+    box-sizing: border-box; /* Ensures padding doesn't break width */
 }
 
 button {

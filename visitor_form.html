@@ -7,9 +7,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div style="position: absolute; top: 20px; right: 20px;">
-        <button onclick="window.location.href='index.html'" style="background: rgba(255,255,255,0.8); border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 12px;">Logout</button>
-    </div>
+    <button class="logout-btn" onclick="window.location.href='index.html'">Logout</button>
 
     <div class="form-container" id="formSection">
         <img src="New_Era_University.svg.png" alt="NEU Logo" style="width: 100px; display: block; margin: 0 auto 20px auto;">
@@ -38,22 +36,21 @@
                 <option value="CON">CON (Nursing)</option>
             </select>
 
-            <button type="submit" id="submitBtn" style="background-color: #cc0000; color: white; border: none; padding: 12px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 20px;">Submit Visit</button>
+            <button type="submit" id="submitBtn">Submit Visit</button>
         </form>
     </div>
 
     <div class="form-container" id="welcomeMessage" style="display: none;">
-        <img src="New_Era_University.svg.png" alt="NEU Logo" style="width: 60px; margin-bottom: 10px;">
-        <h1 style="color: #d90429;">Success!</h1>
-        <p style="font-size: 1.1rem; margin: 20px 0;">Welcome to the NEU Library. Your visit has been recorded in the digital log.</p>
-        <button onclick="window.location.reload()" style="background-color: #333; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">New Check-in</button>
+        <img src="New_Era_University.svg.png" alt="NEU Logo" style="width: 80px; margin-bottom: 20px;">
+        <h1 style="color: #cc0000; font-size: 2rem;">Welcome to NEU Library!</h1>
+        <div style="margin: 30px 0;"></div>
+        <button onclick="window.location.reload()" style="background-color: #333;">New Check-in</button>
     </div>
 
     <script>
         document.getElementById('visitForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // Disable button to prevent double-submissions
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
             btn.innerText = "Recording...";
@@ -65,18 +62,14 @@
                 time: new Date().toLocaleString()
             };
             
-            // PROTOTYPE OPTIMIZATION: Show success immediately for better feel
+            // Instantly transition to the Welcome screen
             document.getElementById('formSection').style.display = 'none';
             document.getElementById('welcomeMessage').style.display = 'block';
 
-            // Send to database in the background
             fetch('/api/visitors', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(visitData)
-            })
-            .then(response => {
-                if (!response.ok) console.error("Database sync failed, but UI updated.");
             })
             .catch(error => console.error("Network Error:", error));
         });
