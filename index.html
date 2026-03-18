@@ -26,36 +26,48 @@
     </div>
 
     <script>
-        // Enter key listener
+        // Prototype Magic: Hit Enter to log in instantly without a password
         document.getElementById("userEmail").addEventListener("keypress", function(event) {
             if (event.key === "Enter") {
                 event.preventDefault();
-                alert("Please click the 'Sign in with Google' button to verify your identity.");
+                const typedEmail = document.getElementById("userEmail").value.trim().toLowerCase();
+                
+                // Use the same logic for the typed email
+                processLogin(typedEmail);
             }
         });
 
+        // This handles the REAL Google Login button
         function handleCredentialResponse(response) {
             const responsePayload = decodeJwtResponse(response.credential);
-            const userEmail = responsePayload.email;
-            console.log("Logged in as: " + userEmail);
-            
-            // 1. Check for Admin (Your email)
-            if (userEmail === 'kazleenjunecaballero@gmail.com') {
+            processLogin(responsePayload.email);
+        }
+
+        // ONE central place for login logic to avoid mistakes
+        function processLogin(email) {
+            if (!email) {
+                alert("Please enter an email address.");
+                return;
+            }
+
+            // 1. Admin/Professor Check
+            if (email === 'kazleenjunecaballero@gmail.com') {
                 alert("Welcome, Professor! Redirecting to Admin Dashboard...");
                 window.location.href = "admin.html";
             } 
-            // 2. Check if it's a valid NEU Student email
-            else if (userEmail.endsWith('@neu.edu.ph')) {
-                alert("Login Successful! Redirecting to Check-in...");
+            // 2. Student NEU Check
+            else if (email.endsWith('@neu.edu.ph')) {
+                alert("NEU Account Verified. Redirecting to Check-in...");
                 window.location.href = "visitor_form.html";
             } 
-            // 3. Block all other personal emails
+            // 3. Rejection logic (The "404" style error)
             else {
-                alert("Access Denied! Please use your official @neu.edu.ph email account.");
-                google.accounts.id.disableAutoSelect(); // Resets the prompt
+                alert("ACCESS DENIED!\n\n'" + email + "' is not a valid NEU account. Only @neu.edu.ph emails can access the Library Log.");
+                if(window.google) google.accounts.id.disableAutoSelect();
             }
         }
 
+        // Keep this! It's the important code that reads the Google Data
         function decodeJwtResponse(token) {
             var base64Url = token.split('.')[1];
             var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
