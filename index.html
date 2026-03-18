@@ -9,7 +9,7 @@
 </head>
 <body>
     <div class="login-card">
-        <img src="https://neu.edu.ph/main/assets/images/NEU_Logo.png" alt="NEU Logo" class="neu-logo">
+        <img src="New_Era_University.svg.png" alt="NEU Logo" class="neu-logo" style="width: 100px; display: block; margin: 0 auto 20px auto;">
         
         <h1>Library Visitor Log</h1>
         <p>Please sign in with your NEU email</p>
@@ -24,31 +24,35 @@
         </div>
         <div class="g_id_signin" data-type="standard"></div>
     </div>
-<script>
-    // This part makes the Enter key work
-    document.getElementById("userEmail").addEventListener("keypress", function(event) {
-        if (event.key === "Enter") {
-            event.preventDefault(); // Stop the page from refreshing
-            alert("Please click the 'Sign in with Google' button to verify your identity.");
-        }
-    });
 
-    function handleCredentialResponse(response) {
-        // ... (keep your existing redirect logic here)
-    }
-</script>
     <script>
+        // Enter key listener
+        document.getElementById("userEmail").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                alert("Please click the 'Sign in with Google' button to verify your identity.");
+            }
+        });
+
         function handleCredentialResponse(response) {
             const responsePayload = decodeJwtResponse(response.credential);
-            console.log("Email: " + responsePayload.email);
+            const userEmail = responsePayload.email;
+            console.log("Logged in as: " + userEmail);
             
-            // Keeps your professor's redirect logic
-            if (responsePayload.email === 'kazleenjunecaballero@gmail.com') {
+            // 1. Check for Admin (Your email)
+            if (userEmail === 'kazleenjunecaballero@gmail.com') {
                 alert("Welcome, Professor! Redirecting to Admin Dashboard...");
                 window.location.href = "admin.html";
-            } else {
+            } 
+            // 2. Check if it's a valid NEU Student email
+            else if (userEmail.endsWith('@neu.edu.ph')) {
                 alert("Login Successful! Redirecting to Check-in...");
                 window.location.href = "visitor_form.html";
+            } 
+            // 3. Block all other personal emails
+            else {
+                alert("Access Denied! Please use your official @neu.edu.ph email account.");
+                google.accounts.id.disableAutoSelect(); // Resets the prompt
             }
         }
 
