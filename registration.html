@@ -6,153 +6,73 @@
     <title>Complete Profile - NEU Library</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('background.jpg'); /* Use your NEU bg image */
-            background-size: cover;
-            background-position: center;
-            height: 100vh;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('background.jpg');
+            background-size: cover; background-position: center; height: 100vh; margin: 0;
+            display: flex; justify-content: center; align-items: center;
         }
-
-        .logout-container {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-        }
-
-        .logout-btn {
-            background-color: #cc0000; /* Red as requested */
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .reg-card {
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            width: 100%;
-            max-width: 500px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            text-align: center;
-        }
-
-        h1 { color: #333; margin-bottom: 5px; }
-        p { color: #666; margin-bottom: 30px; font-size: 14px; }
-
-        .form-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 15px;
-            text-align: left;
-        }
-
-        label { font-size: 12px; color: #888; display: block; margin-bottom: 5px; }
-
-        input, select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-sizing: border-box;
-            font-size: 14px;
-        }
-
+        .reg-card { background: white; padding: 40px; border-radius: 20px; width: 90%; max-width: 500px; text-align: center; }
+        .form-group { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; text-align: left; }
         .full-width { grid-column: span 2; }
-
-        .submit-btn {
-            width: 100%;
-            background-color: #004a99; /* NEU Blue */
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: 0.3s;
-        }
-
-        .submit-btn:hover { background-color: #003366; }
+        label { font-size: 12px; color: #888; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .submit-btn { width: 100%; background-color: #004a99; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; }
     </style>
 </head>
 <body>
-
-    <div class="logout-container">
-        <button class="logout-btn" onclick="location.href='index.html'">Logout</button>
-    </div>
-
     <div class="reg-card">
         <h1>First Time?</h1>
-        <p>Complete your profile to log your visit.</p>
-
+        <p>Set up your profile to start logging visits.</p>
         <form id="profileForm">
             <div class="form-group">
-                <div>
-                    <label>First Name</label>
-                    <input type="text" id="firstName" placeholder="Enter first name" required>
-                </div>
-                <div>
-                    <label>Last Name</label>
-                    <input type="text" id="lastName" placeholder="Enter last name" required>
-                </div>
+                <div><label>First Name</label><input type="text" id="firstName" required></div>
+                <div><label>Last Name</label><input type="text" id="lastName" required></div>
             </div>
-
             <div class="form-group">
                 <div class="full-width">
-                    <label>Institutional Email</label>
-                    <input type="email" id="displayEmail" readonly style="background: #f9f9f9;">
+                    <label>Email</label>
+                    <input type="email" id="displayEmail" readonly style="background: #f4f4f4;">
                 </div>
             </div>
-
             <div class="form-group">
                 <div class="full-width">
                     <label>College</label>
                     <select id="college" required>
-                        <option value="" disabled selected>Select College</option>
-                        <option>College of Informatics and Computing Studies (CICS)</option>
-                        <option>College of Engineering and Architecture (CEA)</option>
-                        <option>College of Business Administration</option>
-                        <option>College of Arts and Sciences</option>
+                        <option value="CICS">CICS</option>
+                        <option value="CEA">CEA</option>
+                        <option value="CBA">CBA</option>
+                        <option value="CAS">CAS</option>
                     </select>
                 </div>
             </div>
-
-            <div class="form-group">
-                <div class="full-width">
-                    <label>Program/Course</label>
-                    <select id="program" required>
-                        <option value="" disabled selected>Select Program</option>
-                        <option>BS Computer Science</option>
-                        <option>BS Information Technology</option>
-                        <option>BS Information Systems</option>
-                    </select>
-                </div>
-            </div>
-
-            <button type="submit" class="submit-btn">Create Profile & Get QR</button>
+            <button type="submit" class="submit-btn">Save Profile & Continue</button>
         </form>
     </div>
 
     <script>
-        // Automatically fill the email from login
         const savedEmail = localStorage.getItem("userEmail");
-        if (savedEmail) {
-            document.getElementById('displayEmail').value = savedEmail;
-        }
+        if (savedEmail) document.getElementById('displayEmail').value = savedEmail;
 
         document.getElementById('profileForm').onsubmit = async (e) => {
             e.preventDefault();
-            // Logic to save profile and generate QR would go here
-            alert("Profile Created! Redirecting to your QR code...");
+            const profileData = {
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                email: savedEmail,
+                college: document.getElementById('college').value,
+                reason: "Account Created" 
+            };
+
+            const response = await fetch('/api/visitors', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(profileData)
+            });
+
+            if (response.ok) {
+                alert("Profile Saved!");
+                window.location.href = "visitor_form.html";
+            }
         };
     </script>
 </body>

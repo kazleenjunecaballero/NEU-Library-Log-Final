@@ -32,34 +32,45 @@ const visitorSchema = new mongoose.Schema({
 
 const Visitor = mongoose.model('Visitor', visitorSchema);
 
-// 3. AUTH LOGIC - REDIRECTS TO SPECIFIC FILES
+// 3. AUTH LOGIC - SMART REDIRECT & BLOCK CHECK
 app.post('/api/auth', async (req, res) => {
-    const { email } = req.body;
-    const lowerEmail = email.toLowerCase();
+    try {
+        const { email } = req.body;
+        const lowerEmail = email.toLowerCase();
 
-    // STRICT ADMIN CHECK
-    if (lowerEmail === 'jcesperanza@neu.edu.ph') {
-        return res.json({ role: 'admin', redirect: 'admin.html' });
-    } 
-    
-    // NEU STUDENT/FACULTY CHECK
-    if (lowerEmail.endsWith('@neu.edu.ph')) {
-        // Check if they already have a profile in the database
-        const existingUser = await Visitor.findOne({ email: lowerEmail });
+        // STRICT ADMIN CHECK
+        if (lowerEmail === 'jcesperanza@neu.edu.ph') {
+            return res.json({ role: 'admin', redirect: 'admin.html' });
+        } 
         
-        if (existingUser) {
-            // If they exist, go straight to the visit form
-            res.json({ role: 'student', redirect: 'visitor_form.html', isNew: false });
+        // NEU STUDENT/FACULTY CHECK
+        if (lowerEmail.endsWith('@neu.edu.ph')) {
+            const existingUser = await Visitor.findOne({ email: lowerEmail });
+            
+            // NEW: BLOCK CHECK
+            // If the user is found and isBlocked is true, stop them here.
+            if (existingUser && existingUser.isBlocked) {
+                return res.status(403).json({ 
+                    message: 'Access Denied: Your account has been blocked. Please see the librarian.' 
+                });
+            }
+
+            if (existingUser) {
+                // Return user goes to visit form
+                res.json({ role: 'student', redirect: 'visitor_form.html', isNew: false });
+            } else {
+                // New user goes to registration
+                res.json({ role: 'student', redirect: 'registration.html', isNew: true });
+            }
         } else {
-            // If they are new, go to the registration form
-            res.json({ role: 'student', redirect: 'registration.html', isNew: true });
+            res.status(403).json({ message: 'Access Denied: Use your NEU email.' });
         }
-    } else {
-        res.status(403).json({ message: 'Access Denied: Use your NEU email.' });
+    } catch (err) {
+        res.status(500).json({ error: "Authentication error" });
     }
 });
 
-// 4. SAVE Visit Data (Used by registration.html and visitor_form.html)
+// 4. SAVE Visit Data
 app.post('/api/visitors', async (req, res) => {
     try {
         const newEntry = new Visitor(req.body);
@@ -70,7 +81,7 @@ app.post('/api/visitors', async (req, res) => {
     }
 });
 
-// 5. GET Visit Data (Used by admin.html)
+// 5. GET Visit Data (For Admin Table & Stats)
 app.get('/api/visitors', async (req, res) => {
     try {
         const { start, end } = req.query;

@@ -3,156 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEU Library - Complete Profile</title>
+    <title>NEU Library - Log Visit</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Styling for the hidden sections and modal */
         .hidden { display: none; }
-        .modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000;
-        }
-        .modal-content { background: white; padding: 30px; border-radius: 15px; text-align: center; max-width: 400px; }
-        .admin-btn { background: #ffc107; color: black; margin-bottom: 10px; width: 100%; }
-        .normal-btn { background: transparent; border: 1px solid #333; width: 100%; }
+        .form-container { background: white; padding: 30px; border-radius: 15px; max-width: 400px; margin: 50px auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
+        input, select, textarea { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #004a99; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .logout-btn { position: absolute; top: 20px; right: 20px; background: #cc0000; width: auto; }
     </style>
 </head>
 <body>
-    <div id="adminModal" class="modal hidden">
-        <div class="modal-content">
-            <h2 style="color: #333;">Admin Email Detected!</h2>
-            <p>Would you like to manage the library or record a normal visit?</p>
-            <button class="admin-btn" onclick="window.location.href='admin.html'">Open Admin Dashboard</button>
-            <button class="normal-btn" onclick="closeModal()">Log Normal Visit</button>
-        </div>
-    </div>
 
     <button class="logout-btn" onclick="window.location.href='index.html'">Logout</button>
 
     <div class="form-container" id="formSection">
-        <img src="New_Era_University.svg.png" alt="NEU Logo" style="width: 100px; display: block; margin: 0 auto 20px auto;">
-        <h1>Complete Your Profile</h1>
-        <form id="visitForm">
-            <label>First Name:</label>
-            <input type="text" id="firstName" placeholder="Enter first name" required>
-
-            <label>Last Name:</label>
-            <input type="text" id="lastName" placeholder="Enter last name" required>
-
-            <label>Institutional Email:</label>
-            <input type="email" id="displayEmail" disabled>
-
-            <label>Role:</label>
-            <select id="role" onchange="toggleSections()" required>
-                <option value="" disabled selected>Select Role...</option>
-                <option value="Student">Student</option>
-                <option value="Faculty">Faculty</option>
+        <img src="New_Era_University.svg.png" alt="NEU Logo" style="width: 80px; margin-bottom: 10px;">
+        <h1 id="welcomeTitle">Library Visit Log</h1>
+        <p id="userEmailDisplay" style="font-size: 0.9em; color: #666;"></p>
+        
+        <form id="visitLogForm">
+            <label style="display: block; text-align: left; font-size: 0.9em; font-weight: bold;">Purpose of Visit:</label>
+            <select id="reason" required>
+                <option value="" disabled selected>Select reason...</option>
+                <option value="Study">Study / Research</option>
+                <option value="Borrow Book">Borrow/Return Books</option>
+                <option value="Computer Use">Computer / Internet Use</option>
+                <option value="Printing">Printing Services</option>
+                <option value="Exam">Taking an Exam</option>
+                <option value="Other">Other</option>
             </select>
 
-            <div id="studentSection" class="hidden">
-                <label>College:</label>
-                <select id="college" onchange="updatePrograms()">
-                    <option value="" disabled selected>Select College...</option>
-                    <option value="CICS">College of Informatics and Computing Studies (CICS)</option>
-                    <option value="CEA">College of Engineering and Architecture (CEA)</option>
-                    <option value="CBA">College of Business Administration</option>
-                </select>
+            <textarea id="otherReason" placeholder="If 'Other', please specify..." rows="3" class="hidden"></textarea>
 
-                <label>Program/Course:</label>
-                <select id="program">
-                    <option value="">Select College first</option>
-                </select>
-            </div>
-
-            <div id="facultySection" class="hidden">
-                <label>Department:</label>
-                <select id="department">
-                    <option value="" disabled selected>Select Department...</option>
-                    <option value="CICS Dept">CICS Department</option>
-                    <option value="General Education">General Education</option>
-                </select>
-
-                <label>Position:</label>
-                <select id="position">
-                    <option value="" disabled selected>Select Position...</option>
-                    <option value="Dean">Dean</option>
-                    <option value="Department Chair">Department Chair</option>
-                    <option value="Professor">Professor</option>
-                    <option value="Instructor">Instructor / Lecturer</option>
-                </select>
-            </div>
-
-            <button type="submit" id="submitBtn" style="margin-top: 20px;">Create Profile & Get QR</button>
+            <button type="submit" id="submitBtn" style="margin-top: 20px;">Submit Visit Log</button>
         </form>
     </div>
 
-    <div class="form-container" id="welcomeMessage" style="display: none;">
-        <h1 style="color: #cc0000;">Profile Completed!</h1>
-        <p>Your library access is now active.</p>
-        <button onclick="window.location.reload()">New Log</button>
+    <div class="form-container" id="successMessage" style="display: none;">
+        <h1 style="color: #28a745;">Success!</h1>
+        <p>Your visit has been recorded. Enjoy your stay in the library!</p>
+        <button onclick="window.location.href='index.html'">Done</button>
     </div>
 
     <script>
-        const userEmail = localStorage.getItem("userEmail") || "Unknown User";
-        document.getElementById('displayEmail').value = userEmail;
+        const userEmail = localStorage.getItem("userEmail");
+        if (!userEmail) window.location.href = "index.html";
+        
+        document.getElementById('userEmailDisplay').innerText = userEmail;
 
-        // Check for Admin Email (Professor Esperanza)
-        if (userEmail === "jcesperanza@neu.edu.ph") {
-            document.getElementById('adminModal').classList.remove('hidden');
-        }
+        // Show/Hide "Other" text area
+        document.getElementById('reason').addEventListener('change', function() {
+            const otherArea = document.getElementById('otherReason');
+            otherArea.classList.toggle('hidden', this.value !== 'Other');
+            if (this.value === 'Other') otherArea.setAttribute('required', 'true');
+            else otherArea.removeAttribute('required');
+        });
 
-        function closeModal() { document.getElementById('adminModal').classList.add('hidden'); }
-
-        // Logic to show Student vs Faculty fields
-        function toggleSections() {
-            const role = document.getElementById('role').value;
-            document.getElementById('studentSection').classList.toggle('hidden', role !== 'Student');
-            document.getElementById('facultySection').classList.toggle('hidden', role !== 'Faculty');
-        }
-
-        // Logic for CICS and other program dropdowns
-        const programData = {
-            "CICS": ["BS Computer Science", "BS Information Systems", "BS Information Technology", "BS Entertainment and Multimedia Computing"],
-            "CEA": ["BS Civil Engineering", "BS Electrical Engineering", "BS Computer Engineering"],
-            "CBA": ["BS Accountancy", "BS Business Administration"]
-        };
-
-        function updatePrograms() {
-            const college = document.getElementById('college').value;
-            const programSelect = document.getElementById('program');
-            programSelect.innerHTML = '<option value="" disabled selected>Select Program</option>';
-            
-            if (programData[college]) {
-                programData[college].forEach(p => {
-                    programSelect.innerHTML += `<option value="${p}">${p}</option>`;
-                });
-            }
-        }
-
-        document.getElementById('visitForm').addEventListener('submit', function(e) {
+        document.getElementById('visitLogForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const role = document.getElementById('role').value;
             
-            const profileData = {
+            const selectedReason = document.getElementById('reason').value;
+            const finalReason = selectedReason === 'Other' ? document.getElementById('otherReason').value : selectedReason;
+
+            // We send the email and reason. 
+            // The server/admin will use the email to find the student's name from the profile we saved earlier.
+            const logData = {
                 email: userEmail,
-                firstName: document.getElementById('firstName').value,
-                lastName: document.getElementById('lastName').value,
-                role: role,
-                college: role === 'Student' ? document.getElementById('college').value : null,
-                program: role === 'Student' ? document.getElementById('program').value : null,
-                department: role === 'Faculty' ? document.getElementById('department').value : null,
-                position: role === 'Faculty' ? document.getElementById('position').value : null,
-                timeRegistered: new Date().toLocaleString()
+                reason: finalReason,
+                time: new Date()
             };
 
-            fetch('/api/visitors', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(profileData)
-            }).then(() => {
-                document.getElementById('formSection').style.display = 'none';
-                document.getElementById('welcomeMessage').style.display = 'block';
-            });
+            try {
+                const response = await fetch('/api/visitors', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(logData)
+                });
+
+                if (response.ok) {
+                    document.getElementById('formSection').style.display = 'none';
+                    document.getElementById('successMessage').style.display = 'block';
+                } else {
+                    alert("Failed to save log.");
+                }
+            } catch (error) {
+                alert("Server connection failed.");
+            }
         });
     </script>
 </body>
