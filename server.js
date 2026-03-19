@@ -8,52 +8,55 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('.'));
 
+// 1. Connect to MongoDB
 const mongoURI = "mongodb+srv://kazleen:gj5Je4qWPg7YP94n@cluster0.edipnmh.mongodb.net/?appName=Cluster0";
 mongoose.connect(mongoURI)
-    .then(() => console.log("✅ Connected to NEU Library Database"))
-    .catch(err => console.error("❌ Database connection error:", err));
+    .then(() => console.log("Connected to NEU Library Database"))
+    .catch(err => console.error("Database connection error:", err));
 
-// UPDATED SCHEMA: Includes Name, Program, and Blocked status
+// 2. Define the Visitor Schema
 const visitorSchema = new mongoose.Schema({
     firstName: String,
     lastName: String,
     email: String,
-    role: String, // Student or Faculty
+    role: String, 
     college: String,
     program: String,
     department: String,
     position: String,
     reason: String,
+    isEmployee: Boolean,
     time: { type: Date, default: Date.now },
     isBlocked: { type: Boolean, default: false }
 });
 
 const Visitor = mongoose.model('Visitor', visitorSchema);
 
-// AUTH LOGIC (Remains the same)
+// 3. AUTH LOGIC - FIXED ADMIN SECURITY
 app.post('/api/auth', (req, res) => {
     const { email } = req.body;
-    if (email === 'jcesperanza@neu.edu.ph') {
+    // Strict Check: Only Sir Esperanza's exact email is Admin
+    if (email.toLowerCase() === 'jcesperanza@neu.edu.ph') {
         res.json({ role: 'admin' });
-    } else if (email.endsWith('@neu.edu.ph')) {
+    } else if (email.toLowerCase().endsWith('@neu.edu.ph')) {
         res.json({ role: 'student' });
     } else {
         res.status(403).json({ message: 'Access Denied' });
     }
 });
 
-// SAVE VISIT: Now records the full profile
+// 4. SAVE Visit Data to MongoDB
 app.post('/api/visitors', async (req, res) => {
     try {
         const newEntry = new Visitor(req.body);
         await newEntry.save();
-        res.status(201).json({ message: "Visit saved!" });
+        res.status(201).json({ message: "Visit saved to cloud!" });
     } catch (err) {
-        res.status(500).json({ error: "Failed to save" });
+        res.status(500).json({ error: "Failed to save to database" });
     }
 });
 
-// GET VISITS: Now supports Date Range filtering
+// 5. GET Visit Data - FIXED "UNDEFINED" NAMES
 app.get('/api/visitors', async (req, res) => {
     try {
         const { start, end } = req.query;
@@ -61,19 +64,42 @@ app.get('/api/visitors', async (req, res) => {
         if (start && end) {
             query.time = { $gte: new Date(start), $lte: new Date(end) };
         }
+        
         const logs = await Visitor.find(query).sort({ time: -1 });
-        res.json(logs);
+        
+        // Map data to ensure no "undefined" appears in the Admin Dashboard table
+        const cleanedLogs = logs.map(v => ({
+            _id: v._id,
+            firstName: v.firstName || "New",
+            lastName: v.lastName || "User",
+            email: v.email || "N/A",
+            role: v.role || (v.isEmployee ? "Staff" : "Student"),
+            college: v.college || v.department || "CICS",
+            reason: v.reason || "Reading",
+            time: v.time,
+            isBlocked: v.isBlocked || false
+        }));
+        
+        res.json(cleanedLogs);
     } catch (err) {
-        res.status(500).json({ error: "Failed to fetch" });
+        res.status(500).json({ error: "Failed to fetch logs" });
     }
 });
 
-// BLOCK VISITOR ROUTE
+// 6. BLOCK VISITOR ROUTE
 app.patch('/api/visitors/:id/block', async (req, res) => {
     try {
-        const visitor = await Visitor.findByIdAndUpdate(req.params.id, { isBlocked: req.body.isBlocked }, { new: true });
+        const visitor = await Visitor.findByIdAndUpdate(
+            req.params.id, 
+            { isBlocked: req.body.isBlocked }, 
+            { new: true }
+        );
         res.json(visitor);
-    } catch (err) { res.status(500).send(err); }
+    } catch (err) { 
+        res.status(500).send(err); 
+    }
 });
 
-app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
