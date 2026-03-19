@@ -3,71 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEU Library Check-in</title>
+    <title>NEU Library - Complete Profile</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Styling for the hidden sections and modal */
+        .hidden { display: none; }
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .modal-content { background: white; padding: 30px; border-radius: 15px; text-align: center; max-width: 400px; }
+        .admin-btn { background: #ffc107; color: black; margin-bottom: 10px; width: 100%; }
+        .normal-btn { background: transparent; border: 1px solid #333; width: 100%; }
+    </style>
 </head>
 <body>
+    <div id="adminModal" class="modal hidden">
+        <div class="modal-content">
+            <h2 style="color: #333;">Admin Email Detected!</h2>
+            <p>Would you like to manage the library or record a normal visit?</p>
+            <button class="admin-btn" onclick="window.location.href='admin.html'">Open Admin Dashboard</button>
+            <button class="normal-btn" onclick="closeModal()">Log Normal Visit</button>
+        </div>
+    </div>
+
     <button class="logout-btn" onclick="window.location.href='index.html'">Logout</button>
 
     <div class="form-container" id="formSection">
         <img src="New_Era_University.svg.png" alt="NEU Logo" style="width: 100px; display: block; margin: 0 auto 20px auto;">
-        <h1>Library Check-in</h1>
+        <h1>Complete Your Profile</h1>
         <form id="visitForm">
-            <label>Purpose of Visit:</label>
-            <select id="reason" required>
-                <option value="" disabled selected>Select purpose...</option>
-                <option value="Reading">Reading</option>
-                <option value="Research">Research</option>
-                <option value="Computer">Computer Use</option>
-                <option value="Borrowing/Returning">Borrowing/Returning Books</option>
-                <option value="Study Group">Study Group</option>
+            <label>First Name:</label>
+            <input type="text" id="firstName" placeholder="Enter first name" required>
+
+            <label>Last Name:</label>
+            <input type="text" id="lastName" placeholder="Enter last name" required>
+
+            <label>Institutional Email:</label>
+            <input type="email" id="displayEmail" disabled>
+
+            <label>Role:</label>
+            <select id="role" onchange="toggleSections()" required>
+                <option value="" disabled selected>Select Role...</option>
+                <option value="Student">Student</option>
+                <option value="Faculty">Faculty</option>
             </select>
-            <label>College:</label>
-            <select id="college" required>
-                <option value="" disabled selected>Select your college...</option>
-                <option value="CICS">CICS (Computing Sciences)</option>
-                <option value="CBA">CBA (Business Admin)</option>
-                <option value="CAS">CAS (Arts & Sciences)</option>
-                <option value="CED">CED (Education)</option>
-                <option value="COE">COE (Engineering)</option>
-                <option value="CON">CON (Nursing)</option>
-            </select>
-            <button type="submit" id="submitBtn">Submit Visit</button>
+
+            <div id="studentSection" class="hidden">
+                <label>College:</label>
+                <select id="college" onchange="updatePrograms()">
+                    <option value="" disabled selected>Select College...</option>
+                    <option value="CICS">College of Informatics and Computing Studies (CICS)</option>
+                    <option value="CEA">College of Engineering and Architecture (CEA)</option>
+                    <option value="CBA">College of Business Administration</option>
+                </select>
+
+                <label>Program/Course:</label>
+                <select id="program">
+                    <option value="">Select College first</option>
+                </select>
+            </div>
+
+            <div id="facultySection" class="hidden">
+                <label>Department:</label>
+                <select id="department">
+                    <option value="" disabled selected>Select Department...</option>
+                    <option value="CICS Dept">CICS Department</option>
+                    <option value="General Education">General Education</option>
+                </select>
+
+                <label>Position:</label>
+                <select id="position">
+                    <option value="" disabled selected>Select Position...</option>
+                    <option value="Dean">Dean</option>
+                    <option value="Department Chair">Department Chair</option>
+                    <option value="Professor">Professor</option>
+                    <option value="Instructor">Instructor / Lecturer</option>
+                </select>
+            </div>
+
+            <button type="submit" id="submitBtn" style="margin-top: 20px;">Create Profile & Get QR</button>
         </form>
     </div>
 
     <div class="form-container" id="welcomeMessage" style="display: none;">
-        <img src="New_Era_University.svg.png" alt="NEU Logo" style="width: 80px; margin-bottom: 20px;">
-        <h1 style="color: #cc0000; font-size: 2rem;">Welcome to NEU Library!</h1>
-        <div style="margin: 30px 0;"></div>
-        <button onclick="window.location.reload()" style="background-color: #333;">New Check-in</button>
+        <h1 style="color: #cc0000;">Profile Completed!</h1>
+        <p>Your library access is now active.</p>
+        <button onclick="window.location.reload()">New Log</button>
     </div>
 
     <script>
+        const userEmail = localStorage.getItem("userEmail") || "Unknown User";
+        document.getElementById('displayEmail').value = userEmail;
+
+        // Check for Admin Email (Professor Esperanza)
+        if (userEmail === "jcesperanza@neu.edu.ph") {
+            document.getElementById('adminModal').classList.remove('hidden');
+        }
+
+        function closeModal() { document.getElementById('adminModal').classList.add('hidden'); }
+
+        // Logic to show Student vs Faculty fields
+        function toggleSections() {
+            const role = document.getElementById('role').value;
+            document.getElementById('studentSection').classList.toggle('hidden', role !== 'Student');
+            document.getElementById('facultySection').classList.toggle('hidden', role !== 'Faculty');
+        }
+
+        // Logic for CICS and other program dropdowns
+        const programData = {
+            "CICS": ["BS Computer Science", "BS Information Systems", "BS Information Technology", "BS Entertainment and Multimedia Computing"],
+            "CEA": ["BS Civil Engineering", "BS Electrical Engineering", "BS Computer Engineering"],
+            "CBA": ["BS Accountancy", "BS Business Administration"]
+        };
+
+        function updatePrograms() {
+            const college = document.getElementById('college').value;
+            const programSelect = document.getElementById('program');
+            programSelect.innerHTML = '<option value="" disabled selected>Select Program</option>';
+            
+            if (programData[college]) {
+                programData[college].forEach(p => {
+                    programSelect.innerHTML += `<option value="${p}">${p}</option>`;
+                });
+            }
+        }
+
         document.getElementById('visitForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            const role = document.getElementById('role').value;
             
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            btn.innerText = "Recording...";
-
-            const visitData = {
-                email: localStorage.getItem("userEmail") || "Unknown User",
-                reason: document.getElementById('reason').value,
-                college: document.getElementById('college').value,
-                isEmployee: false,
-                time: new Date().toLocaleString()
+            const profileData = {
+                email: userEmail,
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                role: role,
+                college: role === 'Student' ? document.getElementById('college').value : null,
+                program: role === 'Student' ? document.getElementById('program').value : null,
+                department: role === 'Faculty' ? document.getElementById('department').value : null,
+                position: role === 'Faculty' ? document.getElementById('position').value : null,
+                timeRegistered: new Date().toLocaleString()
             };
-            
-            document.getElementById('formSection').style.display = 'none';
-            document.getElementById('welcomeMessage').style.display = 'block';
 
             fetch('/api/visitors', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(visitData)
-            })
-            .catch(error => console.error("Network Error:", error));
+                body: JSON.stringify(profileData)
+            }).then(() => {
+                document.getElementById('formSection').style.display = 'none';
+                document.getElementById('welcomeMessage').style.display = 'block';
+            });
         });
     </script>
 </body>
