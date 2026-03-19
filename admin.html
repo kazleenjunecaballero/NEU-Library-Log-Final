@@ -2,152 +2,42 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Dashboard - NEU Library</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <title>Admin - NEU Library</title>
     <style>
-        body { 
-            font-family: 'Segoe UI', sans-serif; 
-            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('background.jpg'); 
-            background-size: cover; background-attachment: fixed; margin: 0; padding: 40px 20px; 
-            display: flex; flex-direction: column; align-items: center;
+        body { font-family: 'Segoe UI', sans-serif; background: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .dashboard-container { 
+            background: white; padding: 20px; border-radius: 15px; width: 95%; max-width: 1300px;
+            transform: scale(0.9); transform-origin: top center; /* Fixes the zoom out issue */
         }
-        .dashboard-container {
-            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
-            padding: 30px; border-radius: 20px; width: 100%; max-width: 1200px; box-shadow: 0 15px 35px rgba(0,0,0,0.3);
-        }
-        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: #fff; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #ddd; }
-        .stat-card h3 { margin: 0; color: #666; font-size: 13px; text-transform: uppercase; }
-        .stat-card p { font-size: 32px; font-weight: bold; margin: 10px 0 0 0; color: #cc0000; }
-        .filter-bar { display: flex; gap: 12px; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 10px; align-items: center; flex-wrap: wrap; }
-        table { width: 100%; border-collapse: collapse; border-radius: 8px; overflow: hidden; background: white; }
-        th { background-color: #cc0000; color: white; padding: 15px; text-align: left; font-size: 13px; }
-        td { padding: 15px; border-bottom: 1px solid #eee; font-size: 14px; color: #333; }
-        .status-badge { background: #333; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; }
-        .blocked { background: #dc3545 !important; }
-        .block-btn { background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; width: 80px; }
-        .unblock-btn { background: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; width: 80px; }
-        .logout-btn { background: #cc0000; color: white; border: none; padding: 10px 25px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        input[type="date"], input[type="text"] { padding: 8px 12px; border: 1px solid #ddd; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
+        th { background: #cc0000; color: white; padding: 12px; text-align: left; }
+        td { padding: 12px; border-bottom: 1px solid #eee; }
+        .logout-btn { background: #cc0000; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; float: right; }
     </style>
 </head>
 <body>
-
     <div class="dashboard-container">
-        <div class="admin-header">
-            <h1 style="color: #cc0000; margin: 0;">Library Admin Dashboard</h1>
-            <button class="logout-btn" onclick="logout()">Logout</button>
-        </div>
-
-        <div class="stats-grid">
-            <div class="stat-card"><h3>Today's Visits</h3><p id="todayCount">0</p></div>
-            <div class="stat-card"><h3>Total Logs</h3><p id="monthCount">0</p></div>
-        </div>
-
-        <div class="filter-bar">
-            <label>From:</label><input type="date" id="startDate">
-            <label>To:</label><input type="date" id="endDate">
-            <button onclick="loadVisitors()" style="background: #333; color: white; border: none; padding: 9px 15px; border-radius: 5px; cursor: pointer;">Filter</button>
-            <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Search names, college, or purpose..." style="flex-grow: 1;">
-            <button onclick="downloadPDF()" style="background: #28a745; color: white; border: none; padding: 9px 15px; border-radius: 5px; cursor: pointer;">Export PDF</button>
-        </div>
-
-        <table id="visitorTable">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Role</th>
-                    <th>College/Dept</th>
-                    <th>Purpose</th>
-                    <th>Date & Time</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="visitorTableBody"></tbody>
+        <button class="logout-btn" onclick="location.href='index.html'">Logout</button>
+        <h1 style="color: #cc0000;">Library Admin Dashboard</h1>
+        <table>
+            <thead><tr><th>Name</th><th>Role</th><th>College</th><th>Reason</th><th>Time</th></tr></thead>
+            <tbody id="tableBody"></tbody>
         </table>
     </div>
-
     <script>
-        function logout() {
-            localStorage.clear();
-            window.location.href = 'index.html';
-        }
-
-        function filterTable() {
-            const filter = document.getElementById("searchInput").value.toUpperCase();
-            const tr = document.getElementById("visitorTableBody").getElementsByTagName("tr");
-            for (let i = 0; i < tr.length; i++) {
-                tr[i].style.display = (tr[i].textContent || tr[i].innerText).toUpperCase().includes(filter) ? "" : "none";
-            }
-        }
-
-        async function loadVisitors() {
-            const start = document.getElementById('startDate').value;
-            const end = document.getElementById('endDate').value;
-            let url = '/api/visitors';
-            if(start && end) url += `?start=${start}&end=${end}`;
-
-            const response = await fetch(url);
-            const data = await response.json();
-            
-            // Update stats
-            const today = new Date().toDateString();
-            document.getElementById('todayCount').innerText = data.filter(v => new Date(v.time).toDateString() === today).length;
-            document.getElementById('monthCount').innerText = data.length;
-
-            const tableBody = document.getElementById('visitorTableBody');
-            tableBody.innerHTML = ''; 
-            
-            data.forEach(v => {
-                const isBlocked = v.isBlocked === true;
-                const row = `<tr>
-                    <td><strong>${v.firstName || 'User'} ${v.lastName || ''}</strong><br><small>${v.email}</small></td>
-                    <td><span class="status-badge ${isBlocked ? 'blocked' : ''}">${isBlocked ? 'BLOCKED' : v.role}</span></td>
-                    <td>${v.college || v.department || 'N/A'}</td>
-                    <td>${v.reason || 'Not Specified'}</td>
+        async function load() {
+            const res = await fetch('/api/visitors');
+            const data = await res.json();
+            document.getElementById('tableBody').innerHTML = data.map(v => `
+                <tr>
+                    <td>${v.firstName} ${v.lastName}</td>
+                    <td>${v.role}</td>
+                    <td>${v.college}</td>
+                    <td>${v.reason}</td>
                     <td>${new Date(v.time).toLocaleString()}</td>
-                    <td>
-                        <button class="${isBlocked ? 'unblock-btn' : 'block-btn'}" onclick="toggleBlock('${v._id}', ${!isBlocked})">
-                            ${isBlocked ? 'Unblock' : 'Block'}
-                        </button>
-                    </td>
-                </tr>`;
-                tableBody.insertAdjacentHTML('beforeend', row);
-            });
+                </tr>`).join('');
         }
-
-        async function toggleBlock(id, status) {
-            if(!confirm(`Are you sure you want to ${status ? 'BLOCK' : 'UNBLOCK'} this user?`)) return;
-            
-            await fetch(`/api/visitors/${id}/block`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ isBlocked: status })
-            });
-            loadVisitors();
-        }
-
-        function downloadPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.setFontSize(18);
-            doc.text("NEU Library Visitor Report", 14, 20);
-            doc.setFontSize(11);
-            doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 28);
-            
-            doc.autoTable({ 
-                startY: 35,
-                html: '#visitorTable', 
-                columns: [0, 1, 2, 3, 4],
-                headStyles: { fillColor: [204, 0, 0] }
-            });
-            doc.save("NEU_Library_Log.pdf");
-        }
-
-        loadVisitors();
+        load();
     </script>
 </body>
 </html>

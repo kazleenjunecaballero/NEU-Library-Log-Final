@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>NEU Library Login</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
     <div class="login-card">
@@ -13,20 +12,10 @@
         <div class="input-group">
             <input type="email" id="userEmail" placeholder="Enter your NEU email">
         </div>
-        <div id="g_id_onload" data-client_id="190984431112-d575e8s1q36upjf1lsfupok2161q1bnm.apps.googleusercontent.com" data-callback="handleCredentialResponse"></div>
-        <div class="g_id_signin" data-type="standard"></div>
+        <button onclick="processLogin(document.getElementById('userEmail').value.trim().toLowerCase())" style="width:100%; padding:10px; background:#cc0000; color:white; border:none; border-radius:5px; cursor:pointer;">Login</button>
     </div>
 
     <script>
-        document.getElementById("userEmail").addEventListener("keypress", (e) => {
-            if (e.key === "Enter") processLogin(e.target.value.trim().toLowerCase());
-        });
-
-        function handleCredentialResponse(response) {
-            const payload = JSON.parse(atob(response.credential.split('.')[1]));
-            processLogin(payload.email);
-        }
-
         async function processLogin(email) {
             if (!email) return alert("Email required");
             try {
@@ -36,12 +25,19 @@
                     body: JSON.stringify({ email })
                 });
                 const data = await res.json();
+                
                 if (res.ok) {
-                    localStorage.setItem("userEmail", email.toLowerCase());
-                    window.location.href = data.redirect; // Redirects based on server check
-                } else {
-                    alert(data.message);
-                }
+                    localStorage.setItem("userEmail", email);
+                    if (data.role === 'admin') {
+                        if (confirm("Welcome Prof! OK for Dashboard, Cancel for Normal Visit.")) {
+                            window.location.href = 'admin.html';
+                        } else {
+                            window.location.href = data.isNew ? 'registration.html' : 'visitor_form.html';
+                        }
+                    } else {
+                        window.location.href = data.redirect;
+                    }
+                } else { alert(data.message); }
             } catch (err) { alert("Server Error"); }
         }
     </script>
