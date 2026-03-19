@@ -36,28 +36,35 @@
             processLogin(responsePayload.email);
         }
 
-        function processLogin(email) {
+        // UPDATED: Now talks to your server to check registration status
+        async function processLogin(email) {
             if (!email) {
                 alert("Please enter an email address.");
                 return;
             }
 
-            const hasDot = email.split('@')[0].includes('.');
+            try {
+                const response = await fetch('/api/auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email })
+                });
 
-            if (email === 'jcesperanza@neu.edu.ph') {
-                alert("Welcome, Professor! Redirecting to Admin Dashboard...");
-                window.location.href = "admin.html";
-            } 
-            else if (email.endsWith('@neu.edu.ph') && hasDot) {
-                // Save email to local storage so visitor_form.html can use it
-                localStorage.setItem("userEmail", email);
-                alert("NEU Account Verified: " + email);
-                window.location.href = "visitor_form.html";
-            } 
-            else {
-                alert("ACCESS DENIED!\n\n'" + email + "' is not a valid NEU account.\n\nPlease use your official NEU account.");
-                document.getElementById("userEmail").value = "";
-                if(window.google) google.accounts.id.disableAutoSelect();
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Save email for the next pages to use
+                    localStorage.setItem("userEmail", email.toLowerCase());
+                    
+                    // The server tells us where to go: admin.html, registration.html, or visitor_form.html
+                    window.location.href = data.redirect;
+                } else {
+                    alert(data.message || "Access Denied");
+                    document.getElementById("userEmail").value = "";
+                }
+            } catch (error) {
+                console.error("Login error:", error);
+                alert("Connection error. Is the server running?");
             }
         }
 
