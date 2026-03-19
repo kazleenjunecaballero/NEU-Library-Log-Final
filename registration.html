@@ -41,11 +41,21 @@
                 </div>
                 <div class="form-group">
                     <label>Course / Program</label>
-                    <select id="year level">
-                        <option value="1st Year">BSCS</option>
-                        <option value="2nd Year">BSIT</option>
-                        <option value="3rd Year">BSCE</option>
-                        <option value="4th Year">BSA</option>
+                    <select id="program">
+                        <option value="BSCS">BSCS</option>
+                        <option value="BSIT">BSIT</option>
+                        <option value="BSCE">BSCE</option>
+                        <option value="BSA">BSA</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Year Level</label>
+                    <select id="yearLevel">
+                        <option value="1st Year">1st Year</option>
+                        <option value="2nd Year">2nd Year</option>
+                        <option value="3rd Year">3rd Year</option>
+                        <option value="4th Year">4th Year</option>
+                        <option value="5th Year">5th Year</option>
                     </select>
                 </div>
             </div>
@@ -54,10 +64,10 @@
                 <div class="form-group">
                     <label>Department</label>
                     <select id="department">
-                        <option value="CICS">Information Technology</option>
-                        <option value="CEA">Computer Science</option>
-                        <option value="CBA">General Education</option>
-                        <option value="CAS">Engineering</option>
+                        <option value="Information Technology">Information Technology</option>
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="General Education">General Education</option>
+                        <option value="Engineering">Engineering</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -100,6 +110,7 @@
                 role: role,
                 college: role === 'Student' ? document.getElementById('college').value : null,
                 program: role === 'Student' ? document.getElementById('program').value : null,
+                yearLevel: role === 'Student' ? document.getElementById('yearLevel').value : null,
                 department: role === 'Faculty' ? document.getElementById('department').value : null,
                 position: role === 'Faculty' ? document.getElementById('position').value : null,
                 reason: "Account Created"
@@ -112,7 +123,12 @@
             });
 
             if (res.ok) {
-                document.body.innerHTML = `<div style="height:100vh; display:flex; justify-content:center; align-items:center; background:white;"><h1 style="color:#cc0000; font-size:48px;">Welcome to NEU Library!</h1></div>`;
+                // Success overlay to cover the whole screen
+                const overlay = document.createElement('div');
+                overlay.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; background:white; display:flex; justify-content:center; align-items:center; z-index:10000;";
+                overlay.innerHTML = `<h1 style="color:#cc0000; font-size:48px; text-align:center;">Welcome to NEU Library!</h1>`;
+                document.body.appendChild(overlay);
+                
                 setTimeout(() => { window.location.href = "index.html"; }, 3000);
             }
         };
