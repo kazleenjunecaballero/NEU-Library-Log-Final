@@ -2,95 +2,55 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEU Library - Log Visit</title>
+    <title>Log Your Visit - NEU Library</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .hidden { display: none; }
-        .form-container { background: white; padding: 30px; border-radius: 15px; max-width: 400px; margin: 50px auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
-        input, select, textarea { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #004a99; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .logout-btn { position: absolute; top: 20px; right: 20px; background: #cc0000; width: auto; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('background.jpg');
+            background-size: cover; background-position: center; height: 100vh; margin: 0;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .form-card { background: white; padding: 40px; border-radius: 20px; width: 90%; max-width: 450px; text-align: center; }
+        select { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid #ddd; font-size: 16px; margin-bottom: 20px; }
+        .log-btn { width: 100%; background-color: #cc0000; color: white; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
-
-    <button class="logout-btn" onclick="window.location.href='index.html'">Logout</button>
-
-    <div class="form-container" id="formSection">
-        <img src="New_Era_University.svg.png" alt="NEU Logo" style="width: 80px; margin-bottom: 10px;">
-        <h1 id="welcomeTitle">Library Visit Log</h1>
-        <p id="userEmailDisplay" style="font-size: 0.9em; color: #666;"></p>
-        
-        <form id="visitLogForm">
-            <label style="display: block; text-align: left; font-size: 0.9em; font-weight: bold;">Purpose of Visit:</label>
-            <select id="reason" required>
-                <option value="" disabled selected>Select reason...</option>
-                <option value="Study">Study / Research</option>
-                <option value="Borrow Book">Borrow/Return Books</option>
-                <option value="Computer Use">Computer / Internet Use</option>
-                <option value="Printing">Printing Services</option>
-                <option value="Exam">Taking an Exam</option>
-                <option value="Other">Other</option>
-            </select>
-
-            <textarea id="otherReason" placeholder="If 'Other', please specify..." rows="3" class="hidden"></textarea>
-
-            <button type="submit" id="submitBtn" style="margin-top: 20px;">Submit Visit Log</button>
-        </form>
-    </div>
-
-    <div class="form-container" id="successMessage" style="display: none;">
-        <h1 style="color: #28a745;">Success!</h1>
-        <p>Your visit has been recorded. Enjoy your stay in the library!</p>
-        <button onclick="window.location.href='index.html'">Done</button>
+    <div class="form-card">
+        <h2>What is your purpose?</h2>
+        <select id="reason">
+            <option value="Study">Study / Research</option>
+            <option value="Borrow">Borrow / Return Books</option>
+            <option value="Clearance">Clearance / Documents</option>
+            <option value="Meeting">Group Meeting</option>
+        </select>
+        <button class="log-btn" onclick="submitVisit()">Log My Visit</button>
     </div>
 
     <script>
-        const userEmail = localStorage.getItem("userEmail");
-        if (!userEmail) window.location.href = "index.html";
-        
-        document.getElementById('userEmailDisplay').innerText = userEmail;
+        async function submitVisit() {
+            const email = localStorage.getItem("userEmail");
+            const reason = document.getElementById('reason').value;
 
-        // Show/Hide "Other" text area
-        document.getElementById('reason').addEventListener('change', function() {
-            const otherArea = document.getElementById('otherReason');
-            otherArea.classList.toggle('hidden', this.value !== 'Other');
-            if (this.value === 'Other') otherArea.setAttribute('required', 'true');
-            else otherArea.removeAttribute('required');
-        });
+            const res = await fetch('/api/visitors', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, reason })
+            });
 
-        document.getElementById('visitLogForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const selectedReason = document.getElementById('reason').value;
-            const finalReason = selectedReason === 'Other' ? document.getElementById('otherReason').value : selectedReason;
-
-            // We send the email and reason. 
-            // The server/admin will use the email to find the student's name from the profile we saved earlier.
-            const logData = {
-                email: userEmail,
-                reason: finalReason,
-                time: new Date()
-            };
-
-            try {
-                const response = await fetch('/api/visitors', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(logData)
-                });
-
-                if (response.ok) {
-                    document.getElementById('formSection').style.display = 'none';
-                    document.getElementById('successMessage').style.display = 'block';
-                } else {
-                    alert("Failed to save log.");
-                }
-            } catch (error) {
-                alert("Server connection failed.");
+            if (res.ok) {
+                // Centered Welcome Message and Redirect
+                document.body.innerHTML = `
+                    <div style="height: 100vh; display: flex; justify-content: center; align-items: center; text-align: center; background: white;">
+                        <h1 style="color: #cc0000; font-family: 'Segoe UI', sans-serif; font-size: 50px;">
+                            Welcome to NEU Library!
+                        </h1>
+                    </div>
+                `;
+                setTimeout(() => { window.location.href = "index.html"; }, 3000);
             }
-        });
+        }
     </script>
 </body>
 </html>

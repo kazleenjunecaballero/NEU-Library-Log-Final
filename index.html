@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>NEU Library Login</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
     <div class="login-card">
@@ -12,10 +13,20 @@
         <div class="input-group">
             <input type="email" id="userEmail" placeholder="Enter your NEU email">
         </div>
-        <button onclick="processLogin(document.getElementById('userEmail').value.trim().toLowerCase())" style="width:100%; padding:10px; background:#cc0000; color:white; border:none; border-radius:5px; cursor:pointer;">Login</button>
+        <div id="g_id_onload" data-client_id="190984431112-d575e8s1q36upjf1lsfupok2161q1bnm.apps.googleusercontent.com" data-callback="handleCredentialResponse"></div>
+        <div class="g_id_signin" data-type="standard"></div>
     </div>
 
     <script>
+        document.getElementById("userEmail").addEventListener("keypress", (e) => {
+            if (e.key === "Enter") processLogin(e.target.value.trim().toLowerCase());
+        });
+
+        function handleCredentialResponse(response) {
+            const payload = JSON.parse(atob(response.credential.split('.')[1]));
+            processLogin(payload.email);
+        }
+
         async function processLogin(email) {
             if (!email) return alert("Email required");
             try {
@@ -27,9 +38,11 @@
                 const data = await res.json();
                 
                 if (res.ok) {
-                    localStorage.setItem("userEmail", email);
+                    localStorage.setItem("userEmail", email.toLowerCase());
+                    
                     if (data.role === 'admin') {
-                        if (confirm("Welcome Prof! OK for Dashboard, Cancel for Normal Visit.")) {
+                        // Admin Choice Modal
+                        if (confirm("Welcome Prof! Click OK to open Admin Dashboard, or Cancel to log a normal visit.")) {
                             window.location.href = 'admin.html';
                         } else {
                             window.location.href = data.isNew ? 'registration.html' : 'visitor_form.html';
@@ -37,7 +50,9 @@
                     } else {
                         window.location.href = data.redirect;
                     }
-                } else { alert(data.message); }
+                } else {
+                    alert(data.message);
+                }
             } catch (err) { alert("Server Error"); }
         }
     </script>

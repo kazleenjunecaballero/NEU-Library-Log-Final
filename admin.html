@@ -2,42 +2,96 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Admin - NEU Library</title>
+    <title>Admin Dashboard - NEU Library</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #333; margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .dashboard-container { 
-            background: white; padding: 20px; border-radius: 15px; width: 95%; max-width: 1300px;
-            transform: scale(0.9); transform-origin: top center; /* Fixes the zoom out issue */
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('background.jpg'); 
+            background-size: cover; background-attachment: fixed; margin: 0; padding: 20px; 
+            display: flex; flex-direction: column; align-items: center;
         }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
-        th { background: #cc0000; color: white; padding: 12px; text-align: left; }
-        td { padding: 12px; border-bottom: 1px solid #eee; }
-        .logout-btn { background: #cc0000; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; float: right; }
+        .dashboard-container {
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+            padding: 20px; border-radius: 20px; width: 95%; max-width: 1400px; box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            /* Zoom scaling fix */
+            transform: scale(0.9); transform-origin: top center;
+        }
+        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: #fff; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #ddd; }
+        .stat-card p { font-size: 28px; font-weight: bold; margin: 5px 0 0 0; color: #cc0000; }
+        .filter-bar { display: flex; gap: 10px; margin-bottom: 20px; background: #f8f9fa; padding: 12px; border-radius: 10px; align-items: center; flex-wrap: wrap; }
+        table { width: 100%; border-collapse: collapse; background: white; font-size: 13px; }
+        th { background-color: #cc0000; color: white; padding: 12px; text-align: left; }
+        td { padding: 12px; border-bottom: 1px solid #eee; color: #333; }
+        .status-badge { background: #333; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; }
+        .block-btn { background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; }
+        .logout-btn { background: #cc0000; color: white; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="dashboard-container">
-        <button class="logout-btn" onclick="location.href='index.html'">Logout</button>
-        <h1 style="color: #cc0000;">Library Admin Dashboard</h1>
-        <table>
-            <thead><tr><th>Name</th><th>Role</th><th>College</th><th>Reason</th><th>Time</th></tr></thead>
-            <tbody id="tableBody"></tbody>
+        <div class="admin-header">
+            <h1 style="color: #cc0000; margin: 0;">Library Admin Dashboard</h1>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card"><h3>Today's Visits</h3><p id="todayCount">0</p></div>
+            <div class="stat-card"><h3>Total Logs</h3><p id="monthCount">0</p></div>
+        </div>
+
+        <div class="filter-bar">
+            <input type="date" id="startDate">
+            <input type="date" id="endDate">
+            <button onclick="loadVisitors()" style="background: #333; color: white; border: none; padding: 9px 15px; border-radius: 5px;">Filter</button>
+            <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Search..." style="flex-grow: 1; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+            <button onclick="downloadPDF()" style="background: #28a745; color: white; border: none; padding: 9px 15px; border-radius: 5px;">Export PDF</button>
+        </div>
+
+        <table id="visitorTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>College/Dept</th>
+                    <th>Purpose</th>
+                    <th>Date & Time</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="visitorTableBody"></tbody>
         </table>
     </div>
+
     <script>
-        async function load() {
-            const res = await fetch('/api/visitors');
-            const data = await res.json();
-            document.getElementById('tableBody').innerHTML = data.map(v => `
+        function logout() { localStorage.clear(); window.location.href = 'index.html'; }
+
+        async function loadVisitors() {
+            const response = await fetch('/api/visitors');
+            const data = await response.json();
+            
+            const today = new Date().toDateString();
+            document.getElementById('todayCount').innerText = data.filter(v => new Date(v.time).toDateString() === today).length;
+            document.getElementById('monthCount').innerText = data.length;
+
+            const tableBody = document.getElementById('visitorTableBody');
+            tableBody.innerHTML = data.map(v => `
                 <tr>
-                    <td>${v.firstName} ${v.lastName}</td>
-                    <td>${v.role}</td>
-                    <td>${v.college}</td>
+                    <td><strong>${v.firstName} ${v.lastName}</strong><br><small>${v.email}</small></td>
+                    <td><span class="status-badge">${v.role || 'Visitor'}</span></td>
+                    <td>${v.college || 'N/A'}</td>
                     <td>${v.reason}</td>
                     <td>${new Date(v.time).toLocaleString()}</td>
-                </tr>`).join('');
+                    <td><button class="block-btn" onclick="toggleBlock('${v._id}', ${!v.isBlocked})">${v.isBlocked ? 'Unblock' : 'Block'}</button></td>
+                </tr>
+            `).join('');
         }
-        load();
+
+        loadVisitors();
     </script>
 </body>
 </html>

@@ -29,14 +29,14 @@ const visitorSchema = new mongoose.Schema({
 
 const Visitor = mongoose.model('Visitor', visitorSchema);
 
-// 3. AUTH LOGIC
+// 3. AUTH LOGIC - SMART REDIRECT & ADMIN CHOICE
 app.post('/api/auth', async (req, res) => {
     try {
         const { email } = req.body;
         const lowerEmail = email.toLowerCase();
         const existingUser = await Visitor.findOne({ email: lowerEmail });
 
-        // Admin logic for Prof. Esperanza
+        // ADMIN CHECK (Prof. Esperanza)
         if (lowerEmail === 'jcesperanza@neu.edu.ph') {
             return res.json({ 
                 role: 'admin', 
@@ -44,50 +44,67 @@ app.post('/api/auth', async (req, res) => {
             });
         } 
         
+        // STUDENT/FACULTY CHECK
         if (lowerEmail.endsWith('@neu.edu.ph')) {
             if (existingUser && existingUser.isBlocked) {
-                return res.status(403).json({ message: 'Access Denied: Account Blocked.' });
+                return res.status(403).json({ 
+                    message: 'Access Denied: Your account has been blocked.' 
+                });
             }
-            res.json({ 
-                role: 'student', 
-                redirect: existingUser ? 'visitor_form.html' : 'registration.html',
-                isNew: existingUser ? false : true 
-            });
+
+            if (existingUser) {
+                res.json({ role: 'student', redirect: 'visitor_form.html', isNew: false });
+            } else {
+                res.json({ role: 'student', redirect: 'registration.html', isNew: true });
+            }
         } else {
-            res.status(403).json({ message: 'Please use your NEU email.' });
+            res.status(403).json({ message: 'Access Denied: Use your NEU email.' });
         }
     } catch (err) {
-        res.status(500).json({ error: "Auth error" });
+        res.status(500).json({ error: "Authentication error" });
     }
 });
 
-// 4. SAVE VISIT DATA
+// 4. SAVE Visit Data
 app.post('/api/visitors', async (req, res) => {
     try {
         const newEntry = new Visitor(req.body);
         await newEntry.save();
-        res.status(201).json({ message: "Success" });
+        res.status(201).json({ message: "Data saved successfully!" });
     } catch (err) {
-        res.status(500).json({ error: "Failed to save" });
+        res.status(500).json({ error: "Failed to save to database" });
     }
 });
 
-// 5. GET VISIT DATA (For Dashboard)
+// 5. GET Visit Data (For Admin Dashboard)
 app.get('/api/visitors', async (req, res) => {
     try {
-        const logs = await Visitor.find().sort({ time: -1 });
+        const { start, end } = req.query;
+        let query = {};
+        if (start && end) {
+            query.time = { $gte: new Date(start), $lte: new Date(end) };
+        }
+        const logs = await Visitor.find(query).sort({ time: -1 });
         res.json(logs);
     } catch (err) {
-        res.status(500).json({ error: "Fetch error" });
+        res.status(500).json({ error: "Failed to fetch logs" });
     }
 });
 
-// 6. BLOCK VISITOR
+// 6. BLOCK VISITOR ROUTE
 app.patch('/api/visitors/:id/block', async (req, res) => {
     try {
-        const visitor = await Visitor.findByIdAndUpdate(req.params.id, { isBlocked: req.body.isBlocked }, { new: true });
+        const visitor = await Visitor.findByIdAndUpdate(
+            req.params.id, 
+            { isBlocked: req.body.isBlocked }, 
+            { new: true }
+        );
         res.json(visitor);
-    } catch (err) { res.status(500).send(err); }
+    } catch (err) { 
+        res.status(500).send(err); 
+    }
 });
 
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => {
+    console.log(`🚀 Server is running on port ${PORT}`);
+});
