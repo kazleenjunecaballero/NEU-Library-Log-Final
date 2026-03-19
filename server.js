@@ -10,7 +10,7 @@ app.use(express.static('.'));
 
 // 1. Connect to MongoDB
 // Replace the string below with your actual MongoDB connection string
-const mongoURI = "YOUR_MONGODB_URI_HERE"; 
+const mongoURI = "mongodb+srv://kazleen:gj5Je4qWPg7YP94n@cluster0.edipnmh.mongodb.net/?appName=Cluster0"; 
 mongoose.connect(mongoURI)
     .then(() => console.log("Connected to NEU Library Database"))
     .catch(err => console.error("Database connection error:", err));
