@@ -2,93 +2,118 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Complete Profile - NEU Library</title>
+    <link rel="stylesheet" href="style.css">
     <style>
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('background.jpg');
-            background-size: cover; background-position: center; height: 100vh; margin: 0;
-            display: flex; justify-content: center; align-items: center;
-        }
-        .reg-card { background: white; padding: 40px; border-radius: 20px; width: 90%; max-width: 500px; text-align: center; }
-        .form-group { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; text-align: left; }
-        .full-width { grid-column: span 2; }
-        label { font-size: 12px; color: #888; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .submit-btn { width: 100%; background-color: #004a99; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .reg-card { background: white; padding: 30px; border-radius: 15px; width: 450px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
+        .form-group { margin-bottom: 15px; text-align: left; }
+        label { display: block; font-size: 13px; color: #666; margin-bottom: 5px; font-weight: bold; }
+        select, input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        .hidden { display: none; }
+        .submit-btn { width: 100%; padding: 15px; background: #004a99; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
     <div class="reg-card">
-        <h1>First Time?</h1>
-        <p>Set up your profile to start logging visits.</p>
-        <form id="profileForm">
+        <h2 style="color: #cc0000;">Register Profile</h2>
+        <form id="regForm">
+            <div class="form-group"><label>First Name</label><input type="text" id="fn" required></div>
+            <div class="form-group"><label>Last Name</label><input type="text" id="ln" required></div>
+            
             <div class="form-group">
-                <div><label>First Name</label><input type="text" id="firstName" required></div>
-                <div><label>Last Name</label><input type="text" id="lastName" required></div>
+                <label>I am a:</label>
+                <select id="userRole" onchange="toggleFields()" required>
+                    <option value="Student">Student</option>
+                    <option value="Faculty">Faculty</option>
+                </select>
             </div>
-            <div class="form-group">
-                <div class="full-width">
-                    <label>I am a:</label>
-                    <select id="role" required>
-                        <option value="Student">Student</option>
-                        <option value="Faculty">Faculty</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-group">
-                <div class="full-width">
+
+            <div id="studentFields">
+                <div class="form-group">
                     <label>College</label>
-                    <select id="college" required>
+                    <select id="college">
                         <option value="CICS">CICS</option>
                         <option value="CEA">CEA</option>
                         <option value="CBA">CBA</option>
                         <option value="CAS">CAS</option>
                     </select>
                 </div>
-            </div>
-            <div class="form-group">
-                <div class="full-width">
+                <div class="form-group">
                     <label>Course / Program</label>
-                    <input type="text" id="program" placeholder="e.g. BSCS" required>
+                    <select id="program">
+                        <option value="BSCS">BSCS</option>
+                        <option value="BSIT">BSIT</option>
+                        <option value="BSCE">BSCE</option>
+                        <option value="BSA">BSA</option>
+                    </select>
                 </div>
             </div>
-            <button type="submit" class="submit-btn">Save Profile & Continue</button>
+
+            <div id="facultyFields" class="hidden">
+                <div class="form-group">
+                    <label>Department</label>
+                    <select id="department">
+                        <option value="Information Technology">Information Technology</option>
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="General Education">General Education</option>
+                        <option value="Engineering">Engineering</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Position</label>
+                    <select id="position">
+                        <option value="Instructor">Instructor</option>
+                        <option value="Assistant Professor">Assistant Professor</option>
+                        <option value="Associate Professor">Associate Professor</option>
+                        <option value="Professor">Professor</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn">Complete Registration</button>
         </form>
     </div>
 
     <script>
-        const savedEmail = localStorage.getItem("userEmail");
+        function toggleFields() {
+            const role = document.getElementById('userRole').value;
+            const sFields = document.getElementById('studentFields');
+            const fFields = document.getElementById('facultyFields');
+            
+            if (role === 'Faculty') {
+                sFields.classList.add('hidden');
+                fFields.classList.remove('hidden');
+            } else {
+                sFields.classList.remove('hidden');
+                fFields.classList.add('hidden');
+            }
+        }
 
-        document.getElementById('profileForm').onsubmit = async (e) => {
+        document.getElementById('regForm').onsubmit = async (e) => {
             e.preventDefault();
-            const profileData = {
-                firstName: document.getElementById('firstName').value,
-                lastName: document.getElementById('lastName').value,
-                email: savedEmail,
-                role: document.getElementById('role').value,
-                college: document.getElementById('college').value,
-                program: document.getElementById('program').value,
-                reason: "Account Created" 
+            const role = document.getElementById('userRole').value;
+            const data = {
+                firstName: document.getElementById('fn').value,
+                lastName: document.getElementById('ln').value,
+                email: localStorage.getItem("userEmail"),
+                role: role,
+                college: role === 'Student' ? document.getElementById('college').value : null,
+                program: role === 'Student' ? document.getElementById('program').value : null,
+                department: role === 'Faculty' ? document.getElementById('department').value : null,
+                position: role === 'Faculty' ? document.getElementById('position').value : null,
+                reason: "Account Created"
             };
 
-            const response = await fetch('/api/visitors', {
+            const res = await fetch('/api/visitors', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(profileData)
+                body: JSON.stringify(data)
             });
 
-            if (response.ok) {
-                // Centered Welcome Screen
-                document.body.innerHTML = `
-                    <div style="height: 100vh; display: flex; justify-content: center; align-items: center; text-align: center; background: white;">
-                        <h1 style="color: #cc0000; font-family: 'Segoe UI', sans-serif; font-size: 50px;">
-                            Welcome to NEU Library!
-                        </h1>
-                    </div>
-                `;
-                setTimeout(() => { window.location.href = "visitor_form.html"; }, 3000);
+            if (res.ok) {
+                document.body.innerHTML = `<div style="height:100vh; display:flex; justify-content:center; align-items:center; background:white;"><h1 style="color:#cc0000; font-size:48px;">Welcome to NEU Library!</h1></div>`;
+                setTimeout(() => { window.location.href = "index.html"; }, 3000);
             }
         };
     </script>
