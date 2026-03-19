@@ -87,4 +87,32 @@ app.get('/api/visitors', async (req, res) => {
             lastName: v.lastName || "User",
             email: v.email || "N/A",
             role: v.role || (v.isEmployee ? "Staff" : "Student"),
-            college:
+            college: v.college || v.department || "N/A",
+            reason: v.reason || "Not Set",
+            time: v.time,
+            isBlocked: v.isBlocked || false
+        }));
+        
+        res.json(cleanedLogs);
+    } catch (err) {
+        res.status(500).json({ error: "Failed to fetch logs" });
+    }
+});
+
+// 6. BLOCK VISITOR ROUTE
+app.patch('/api/visitors/:id/block', async (req, res) => {
+    try {
+        const visitor = await Visitor.findByIdAndUpdate(
+            req.params.id, 
+            { isBlocked: req.body.isBlocked }, 
+            { new: true }
+        );
+        res.json(visitor);
+    } catch (err) { 
+        res.status(500).send(err); 
+    }
+});
+
+app.listen(PORT, () => {
+    console.log(`🚀 Server is running on port ${PORT}`);
+});
