@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const mongoose = require('mongoose'); // New: Added Mongoose
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -7,11 +8,25 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('.'));
 
-// Temporary Database (This resets if the server restarts on Render)
-// For your final Capstone, we will connect this to MongoDB!
-let visitorLogs = [];
+// 1. Connect to MongoDB
+// Replace the string below with your actual MongoDB connection string
+const mongoURI = "YOUR_MONGODB_URI_HERE"; 
+mongoose.connect(mongoURI)
+    .then(() => console.log("Connected to NEU Library Database"))
+    .catch(err => console.error("Database connection error:", err));
 
-// 1. Auth Logic (From your previous code)
+// 2. Define the Visitor Schema
+const visitorSchema = new mongoose.Schema({
+    email: String,
+    reason: String,
+    college: String,
+    isEmployee: Boolean,
+    time: String
+});
+
+const Visitor = mongoose.model('Visitor', visitorSchema);
+
+// 3. Auth Logic
 app.post('/api/auth', (req, res) => {
     const { email } = req.body;
     if (email === 'jcesperanza@neu.edu.ph') {
@@ -23,20 +38,25 @@ app.post('/api/auth', (req, res) => {
     }
 });
 
-// 2. RECEIVE Visit Data (This is what was missing!)
-app.post('/api/visitors', (req, res) => {
-    const { email, reason, college, isEmployee, time } = req.body;
-    
-    const newEntry = { email, reason, college, isEmployee, time };
-    visitorLogs.push(newEntry); // Save it to our list
-    
-    console.log("New Visit Recorded:", newEntry);
-    res.status(201).json({ message: "Visit recorded successfully!" });
+// 4. SAVE Visit Data to MongoDB
+app.post('/api/visitors', async (req, res) => {
+    try {
+        const newEntry = new Visitor(req.body);
+        await newEntry.save();
+        res.status(201).json({ message: "Visit saved to cloud!" });
+    } catch (err) {
+        res.status(500).json({ error: "Failed to save to database" });
+    }
 });
 
-// 3. SEND Visit Data (To display on the Admin Dashboard)
-app.get('/api/visitors', (req, res) => {
-    res.json(visitorLogs);
+// 5. GET Visit Data from MongoDB
+app.get('/api/visitors', async (req, res) => {
+    try {
+        const logs = await Visitor.find().sort({ _id: -1 }); // Show newest first
+        res.json(logs);
+    } catch (err) {
+        res.status(500).json({ error: "Failed to fetch logs" });
+    }
 });
 
 app.listen(PORT, () => {
