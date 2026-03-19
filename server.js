@@ -48,7 +48,7 @@ app.post('/api/auth', async (req, res) => {
         } 
         
         // Institutional Email Validation
-        if (lowerEmail.endsWith('@neu.edu.ph')) {
+        if (lowerEmail.endsWith('firstname.lastname@neu.edu.ph')) {
             if (existingUser && existingUser.isBlocked) {
                 return res.status(403).json({ 
                     message: 'Access Denied: Your account has been blocked by the admin.' 
