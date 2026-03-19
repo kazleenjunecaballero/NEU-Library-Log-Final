@@ -7,72 +7,133 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
-        .admin-header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 30px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; border-top: 5px solid #cc0000; }
-        .stat-card h3 { margin: 0; color: #666; font-size: 14px; }
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('background.jpg'); /* Background with dark overlay */
+            background-size: cover;
+            background-attachment: fixed;
+            margin: 0; 
+            padding: 40px 20px; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .dashboard-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 1200px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+        }
+
+        .admin-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 30px; 
+            border-bottom: 2px solid #eee;
+            padding-bottom: 15px;
+        }
+
+        .stats-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 20px; 
+            margin-bottom: 30px; 
+        }
+
+        .stat-card { 
+            background: #fff; 
+            padding: 20px; 
+            border-radius: 12px; 
+            text-align: center; 
+            border: 1px solid #ddd;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .stat-card h3 { margin: 0; color: #666; font-size: 13px; text-transform: uppercase; }
         .stat-card p { font-size: 32px; font-weight: bold; margin: 10px 0 0 0; color: #cc0000; }
-        .filter-bar { display: flex; gap: 15px; margin-bottom: 20px; background: white; padding: 20px; border-radius: 10px; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); flex-wrap: wrap; }
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background-color: #cc0000; color: white; text-transform: uppercase; font-size: 12px; }
-        .status-badge { background: #e9ecef; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-        .block-btn { background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; transition: 0.3s; }
-        .block-btn:hover { background: #a71d2a; }
-        .logout-btn { background: #333; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+
+        .filter-bar { 
+            display: flex; 
+            gap: 12px; 
+            margin-bottom: 20px; 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 10px; 
+            align-items: center; 
+            flex-wrap: wrap; 
+        }
+
+        table { width: 100%; border-collapse: collapse; border-radius: 8px; overflow: hidden; }
+        th { background-color: #cc0000; color: white; padding: 15px; text-align: left; font-size: 13px; }
+        td { padding: 15px; border-bottom: 1px solid #eee; background: white; font-size: 14px; color: #333; }
+        
+        .status-badge { background: #333; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; }
+
+        .block-btn { background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; }
+        .logout-btn { background: #cc0000; color: white; border: none; padding: 10px 25px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .logout-btn:hover { background: #ff0000; }
+
+        input[type="date"], input[type="text"] {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
-    <div class="admin-header">
-        <h1 style="color: #cc0000; margin: 0;">NEU Library Records</h1>
-        <button class="logout-btn" onclick="logout()">Logout</button>
-    </div>
 
-    <div class="stats-grid">
-        <div class="stat-card"><h3>Today</h3><p id="todayCount">0</p></div>
-        <div class="stat-card"><h3>This Week</h3><p id="weekCount">0</p></div>
-        <div class="stat-card"><h3>This Month</h3><p id="monthCount">0</p></div>
-    </div>
+    <div class="dashboard-container">
+        <div class="admin-header">
+            <h1 style="color: #cc0000; margin: 0;">Library Admin Dashboard</h1>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
 
-    <div class="filter-bar">
-        <label>From:</label><input type="date" id="startDate">
-        <label>To:</label><input type="date" id="endDate">
-        <button onclick="loadVisitors()" style="background: #cc0000; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">Apply Date Filter</button>
-        <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Search names, program, reason..." style="flex-grow: 1; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
-        <button onclick="downloadPDF()" style="background: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">Export PDF</button>
-    </div>
+        <div class="stats-grid">
+            <div class="stat-card"><h3>Today's Visits</h3><p id="todayCount">0</p></div>
+            <div class="stat-card"><h3>Total Logs</h3><p id="monthCount">0</p></div>
+        </div>
 
-    <table id="visitorTable">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Role</th>
-                <th>College/Dept</th>
-                <th>Purpose</th>
-                <th>Date & Time</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody id="visitorTableBody"></tbody>
-    </table>
+        <div class="filter-bar">
+            <label>From:</label><input type="date" id="startDate">
+            <label>To:</label><input type="date" id="endDate">
+            <button onclick="loadVisitors()" style="background: #333; color: white; border: none; padding: 9px 15px; border-radius: 5px; cursor: pointer;">Filter</button>
+            <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Search names, college, or purpose..." style="flex-grow: 1;">
+            <button onclick="downloadPDF()" style="background: #28a745; color: white; border: none; padding: 9px 15px; border-radius: 5px; cursor: pointer;">Export Report</button>
+        </div>
+
+        <table id="visitorTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>College/Dept</th>
+                    <th>Purpose</th>
+                    <th>Date & Time</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="visitorTableBody"></tbody>
+        </table>
+    </div>
 
     <script>
-        // LOGOUT LOGIC
         function logout() {
             localStorage.clear();
             window.location.href = 'index.html';
         }
 
-        // SEARCH FILTER LOGIC [Requirement 3]
         function filterTable() {
             const input = document.getElementById("searchInput");
             const filter = input.value.toUpperCase();
             const tr = document.getElementById("visitorTableBody").getElementsByTagName("tr");
-
             for (let i = 0; i < tr.length; i++) {
-                const textContent = tr[i].textContent || tr[i].innerText;
-                tr[i].style.display = textContent.toUpperCase().indexOf(filter) > -1 ? "" : "none";
+                const text = tr[i].textContent || tr[i].innerText;
+                tr[i].style.display = text.toUpperCase().indexOf(filter) > -1 ? "" : "none";
             }
         }
 
@@ -85,7 +146,6 @@
             const response = await fetch(url);
             const data = await response.json();
             
-            // Stats Calculations
             document.getElementById('todayCount').innerText = data.filter(v => new Date(v.time).toDateString() === new Date().toDateString()).length;
             document.getElementById('monthCount').innerText = data.length;
 
@@ -96,7 +156,7 @@
                 const row = `<tr>
                     <td><strong>${v.firstName} ${v.lastName}</strong></td>
                     <td><span class="status-badge">${v.role}</span></td>
-                    <td>${v.college || v.department}</td>
+                    <td>${v.college}</td>
                     <td>${v.reason}</td>
                     <td>${new Date(v.time).toLocaleString()}</td>
                     <td><button class="block-btn" onclick="toggleBlock('${v._id}', ${!v.isBlocked})">${v.isBlocked ? 'Unblock' : 'Block'}</button></td>
@@ -118,10 +178,7 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             doc.text("NEU Library Visitor Report", 14, 15);
-            doc.autoTable({ 
-                html: '#visitorTable',
-                columns: [0, 1, 2, 3, 4] // Don't include the 'Action' column in PDF
-            });
+            doc.autoTable({ html: '#visitorTable', columns: [0, 1, 2, 3, 4] });
             doc.save("NEU_Library_Log.pdf");
         }
 
