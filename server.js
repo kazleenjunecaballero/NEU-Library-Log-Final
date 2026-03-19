@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const mongoose = require('mongoose'); // New: Added Mongoose
+const mongoose = require('mongoose');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -8,25 +8,29 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('.'));
 
-// 1. Connect to MongoDB
-// Replace the string below with your actual MongoDB connection string
 const mongoURI = "mongodb+srv://kazleen:gj5Je4qWPg7YP94n@cluster0.edipnmh.mongodb.net/?appName=Cluster0";
 mongoose.connect(mongoURI)
-    .then(() => console.log("Connected to NEU Library Database"))
-    .catch(err => console.error("Database connection error:", err));
+    .then(() => console.log("✅ Connected to NEU Library Database"))
+    .catch(err => console.error("❌ Database connection error:", err));
 
-// 2. Define the Visitor Schema
+// UPDATED SCHEMA: Includes Name, Program, and Blocked status
 const visitorSchema = new mongoose.Schema({
+    firstName: String,
+    lastName: String,
     email: String,
-    reason: String,
+    role: String, // Student or Faculty
     college: String,
-    isEmployee: Boolean,
-    time: String
+    program: String,
+    department: String,
+    position: String,
+    reason: String,
+    time: { type: Date, default: Date.now },
+    isBlocked: { type: Boolean, default: false }
 });
 
 const Visitor = mongoose.model('Visitor', visitorSchema);
 
-// 3. Auth Logic
+// AUTH LOGIC (Remains the same)
 app.post('/api/auth', (req, res) => {
     const { email } = req.body;
     if (email === 'jcesperanza@neu.edu.ph') {
@@ -38,27 +42,38 @@ app.post('/api/auth', (req, res) => {
     }
 });
 
-// 4. SAVE Visit Data to MongoDB
+// SAVE VISIT: Now records the full profile
 app.post('/api/visitors', async (req, res) => {
     try {
         const newEntry = new Visitor(req.body);
         await newEntry.save();
-        res.status(201).json({ message: "Visit saved to cloud!" });
+        res.status(201).json({ message: "Visit saved!" });
     } catch (err) {
-        res.status(500).json({ error: "Failed to save to database" });
+        res.status(500).json({ error: "Failed to save" });
     }
 });
 
-// 5. GET Visit Data from MongoDB
+// GET VISITS: Now supports Date Range filtering
 app.get('/api/visitors', async (req, res) => {
     try {
-        const logs = await Visitor.find().sort({ _id: -1 }); // Show newest first
+        const { start, end } = req.query;
+        let query = {};
+        if (start && end) {
+            query.time = { $gte: new Date(start), $lte: new Date(end) };
+        }
+        const logs = await Visitor.find(query).sort({ time: -1 });
         res.json(logs);
     } catch (err) {
-        res.status(500).json({ error: "Failed to fetch logs" });
+        res.status(500).json({ error: "Failed to fetch" });
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+// BLOCK VISITOR ROUTE
+app.patch('/api/visitors/:id/block', async (req, res) => {
+    try {
+        const visitor = await Visitor.findByIdAndUpdate(req.params.id, { isBlocked: req.body.isBlocked }, { new: true });
+        res.json(visitor);
+    } catch (err) { res.status(500).send(err); }
 });
+
+app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
