@@ -52,4 +52,4 @@ A full-stack web application designed for New Era University to manage and track
 ---
 
 ## 👤 Author
-**Laurice Anne Laureta** *BSCS - 3rd Year* *New Era University*
+**Kazleen June B Caballero** *BSIT - 2rd Year* *New Era University*
