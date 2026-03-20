@@ -79,7 +79,7 @@
                 return;
             }
             document.getElementById('welcomeMsg').innerText = 
-                `Welcome ${name} of ${program}! Welcome to NEU Library!`;
+             `Welcome, ${name}${program ? ' from ' + program : ''}! Welcome to NEU Library!`;
         }
 
         function handleLogout() {
