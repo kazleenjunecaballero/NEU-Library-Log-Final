@@ -5,72 +5,90 @@
     <title>NEU Library Login</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Custom Internal Modal */
-        #adminModal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px);
-            z-index: 1000; justify-content: center; align-items: center;
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            /* Make sure background.jpg is in your folder for this to show */
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('background.jpg'); 
+            background-size: cover; 
+            background-position: center;
+            height: 100vh; 
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
         }
-        .modal-content {
-            background: white; padding: 30px; border-radius: 15px; text-align: center;
-            position: relative; width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        .login-card {
+            background: rgba(255, 255, 255, 0.95); 
+            padding: 40px; 
+            border-radius: 20px;
+            width: 350px; 
+            text-align: center; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        .close-x { position: absolute; top: 10px; right: 15px; cursor: pointer; font-size: 20px; font-weight: bold; color: #666; }
-        .choice-btn { 
-            display: block; width: 100%; padding: 12px; margin: 10px 0; 
-            border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px;
+        input {
+            width: 100%; 
+            padding: 12px; 
+            margin: 10px 0; 
+            border: 1px solid #ddd;
+            border-radius: 8px; 
+            box-sizing: border-box;
         }
-        .btn-admin { background: #cc0000; color: white; }
-        .btn-normal { background: #004a99; color: white; }
+        .login-btn {
+            width: 100%; 
+            padding: 12px; 
+            background: #cc0000; 
+            color: white;
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 16px;
+        }
+        .login-btn:hover { background: #990000; }
     </style>
 </head>
 <body>
     <div class="login-card">
-        <img src="New_Era_University.svg.png" alt="NEU Logo" style="width: 100px; display: block; margin: 0 auto 10px auto;">
-        <h1>Library Visitor Log</h1>
-        <input type="email" id="userEmail" placeholder="jcesperanza@neu.edu.ph" style="width: 80%; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ddd;">
-        <button onclick="handleLogin()" style="width: 85%; padding: 12px; background: #cc0000; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Login</button>
-    </div>
-
-    <div id="adminModal">
-        <div class="modal-content">
-            <span class="close-x" onclick="closeModal()">&times;</span>
-            <h2 style="color: #333; margin-top: 0;">Welcome, Prof!</h2>
-            <p style="color: #666;">Where would you like to go?</p>
-            <button class="choice-btn btn-admin" onclick="window.location.href='admin.html'">Admin Dashboard</button>
-            <button class="choice-btn btn-normal" id="normalVisitBtn">Normal Visit</button>
-        </div>
+        <img src="New_Era_University.svg.png" alt="NEU Logo" style="width: 80px; margin-bottom: 10px;">
+        <h2 style="color: #333; margin-bottom: 5px;">Library Visitor Log</h2>
+        <p style="color: #666; font-size: 14px; margin-bottom: 20px;">Sign in with your institutional email</p>
+        
+        <input type="email" id="userEmail" placeholder="Email (e.g. alaurice@neu.edu.ph)" required>
+        <button class="login-btn" onclick="handleLogin()">Login</button>
     </div>
 
     <script>
-        let adminData = null;
-
         async function handleLogin() {
-            const email = document.getElementById('userEmail').value.trim();
-            if (!email) return alert("Please enter your email");
+            const emailInput = document.getElementById('userEmail');
+            const email = emailInput.value.trim();
+            
+            if (!email) {
+                return alert("Please enter your email.");
+            }
 
-            const res = await fetch('/api/auth', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email })
-            });
-            const data = await res.json();
+            try {
+                const res = await fetch('/api/auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                
+                const data = await res.json();
 
-            if (res.ok) {
-                localStorage.setItem("userEmail", email.toLowerCase());
-                if (data.role === 'admin') {
-                    adminData = data;
-                    document.getElementById('adminModal').style.display = 'flex';
-                    document.getElementById('normalVisitBtn').onclick = () => {
-                        window.location.href = data.isNew ? 'registration.html' : 'visitor_form.html';
-                    };
+                if (res.ok) {
+                    // Save email so other pages know who is logged in
+                    localStorage.setItem("userEmail", email.toLowerCase());
+                    
+                    // The server tells us where to go (admin.html, registration.html, or visitor_form.html)
+                    window.location.href = data.redirect; 
                 } else {
-                    window.location.href = data.redirect;
+                    alert(data.message || "Invalid Email");
                 }
-            } else { alert(data.message); }
+            } catch (err) {
+                console.error("Login Error:", err);
+                alert("Server connection failed. Make sure your server is running (node server.js).");
+            }
         }
-
-        function closeModal() { document.getElementById('adminModal').style.display = 'none'; }
     </script>
 </body>
 </html>

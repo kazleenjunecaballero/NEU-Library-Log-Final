@@ -9,22 +9,23 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('.'));
 
-// 1. Database Connection
+// Database Connection
 const mongoURI = "mongodb+srv://kazleen:gj5Je4qWPg7YP94n@cluster0.edipnmh.mongodb.net/NEU_Library?retryWrites=true&w=majority";
 mongoose.connect(mongoURI)
     .then(() => console.log("✅ Connected to NEU Library Database"))
     .catch(err => console.error("❌ Database connection error:", err));
 
-// 2. Visitor Schema (Updated with Faculty Fields)
+// Visitor Schema - Matches your Registration Form exactly
 const visitorSchema = new mongoose.Schema({
     firstName: String,
     lastName: String,
-    email: String,
+    email: { type: String, lowercase: true }, // Added lowercase to prevent duplicates
     role: String, 
     college: String,
     program: String,
+    yearLevel: String, 
     department: String,
-    position: String,
+    position: String, // Added missing position field
     reason: String,
     time: { type: Date, default: Date.now },
     isBlocked: { type: Boolean, default: false }
@@ -32,35 +33,34 @@ const visitorSchema = new mongoose.Schema({
 
 const Visitor = mongoose.model('Visitor', visitorSchema);
 
-// 3. AUTH ROUTE
+// AUTH ROUTE
 app.post('/api/auth', async (req, res) => {
     try {
         const { email } = req.body;
-        const lowerEmail = email.toLowerCase();
-        const existingUser = await Visitor.findOne({ email: lowerEmail });
+        if (!email) return res.status(400).json({ message: "Email is required" });
 
+        const lowerEmail = email.toLowerCase();
+        
         // Admin Identity Check
         if (lowerEmail === 'jcesperanza@neu.edu.ph') {
-            return res.json({ 
-                role: 'admin', 
-                isNew: existingUser ? false : true 
-            });
+            return res.json({ role: 'admin', redirect: 'admin.html' });
         } 
-        
-        // Institutional Email Validation
-        if (lowerEmail.endsWith('firstname.lastname@neu.edu.ph')) {
+
+        // Check if user exists in database
+        const existingUser = await Visitor.findOne({ email: lowerEmail });
+
+        if (lowerEmail.endsWith('@neu.edu.ph')) {
             if (existingUser && existingUser.isBlocked) {
-                return res.status(403).json({ 
-                    message: 'Access Denied: Your account has been blocked by the admin.' 
-                });
+                return res.status(403).json({ message: 'Access Denied: Account Blocked.' });
             }
+            
+            // If they exist, go to log form; if not, go to registration
             res.json({ 
-                role: 'student', 
-                redirect: existingUser ? 'visitor_form.html' : 'registration.html',
-                isNew: existingUser ? false : true 
+                role: 'user', 
+                redirect: existingUser ? 'visitor_form.html' : 'registration.html' 
             });
         } else {
-            res.status(403).json({ message: 'Access Denied: Please use your NEU email.' });
+            res.status(403).json({ message: 'Please use your @neu.edu.ph email.' });
         }
     } catch (err) {
         console.error("Auth Error:", err);
@@ -68,7 +68,7 @@ app.post('/api/auth', async (req, res) => {
     }
 });
 
-// 4. SAVE VISITOR DATA
+// SAVE VISITOR (Registration)
 app.post('/api/visitors', async (req, res) => {
     try {
         const newEntry = new Visitor(req.body);
@@ -80,52 +80,24 @@ app.post('/api/visitors', async (req, res) => {
     }
 });
 
-// 5. GET DATA WITH DATE FILTERS (The "Missing" Code)
+// GET ALL VISITORS (For Admin)
 app.get('/api/visitors', async (req, res) => {
     try {
-        const { start, end } = req.query;
-        let query = {};
-        
-        if (start && end) {
-            query.time = { 
-                $gte: new Date(start), 
-                $lte: new Date(new Date(end).setHours(23, 59, 59)) 
-            };
-        }
-        
-        const logs = await Visitor.find(query).sort({ time: -1 });
+        const logs = await Visitor.find().sort({ time: -1 });
         res.json(logs);
     } catch (err) {
-        console.error("Fetch Error:", err);
         res.status(500).json({ error: "Failed to fetch logs" });
     }
 });
 
-// 6. BLOCK/UNBLOCK VISITOR
-app.patch('/api/visitors/:id/block', async (req, res) => {
-    try {
-        const { isBlocked } = req.body;
-        const visitor = await Visitor.findByIdAndUpdate(
-            req.params.id, 
-            { isBlocked: isBlocked }, 
-            { new: true }
-        );
-        res.json(visitor);
-    } catch (err) {
-        res.status(500).json({ error: "Block action failed" });
-    }
-});
-
-// 7. DELETE LOG (Optional but usually in full versions)
+// DELETE LOG
 app.delete('/api/visitors/:id', async (req, res) => {
     try {
         await Visitor.findByIdAndDelete(req.params.id);
-        res.json({ message: "Log deleted" });
+        res.json({ message: "Deleted" });
     } catch (err) {
         res.status(500).json({ error: "Delete failed" });
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`🚀 Server running at http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`🚀 Server at http://localhost:${PORT}`));

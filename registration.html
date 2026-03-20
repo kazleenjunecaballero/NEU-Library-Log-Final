@@ -3,27 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <title>Complete Profile - NEU Library</title>
-    <link rel="stylesheet" href="style.css">
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .reg-card { background: white; padding: 30px; border-radius: 15px; width: 450px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
-        .form-group { margin-bottom: 15px; text-align: left; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .reg-card { background: white; padding: 30px; border-radius: 15px; width: 400px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 15px; }
         label { display: block; font-size: 13px; color: #666; margin-bottom: 5px; font-weight: bold; }
-        select, input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        select, input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
         .hidden { display: none; }
-        .submit-btn { width: 100%; padding: 15px; background: #004a99; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .submit-btn { width: 100%; padding: 12px; background: #004a99; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .submit-btn:hover { background: #003366; }
     </style>
 </head>
 <body>
     <div class="reg-card">
-        <h2 style="color: #cc0000;">Register Profile</h2>
+        <h2 style="color: #cc0000; text-align: center;">Register Profile</h2>
         <form id="regForm">
             <div class="form-group"><label>First Name</label><input type="text" id="fn" required></div>
             <div class="form-group"><label>Last Name</label><input type="text" id="ln" required></div>
             
             <div class="form-group">
                 <label>I am a:</label>
-                <select id="userRole" onchange="toggleFields()" required>
+                <select id="userRole" onchange="toggleFields()">
                     <option value="Student">Student</option>
                     <option value="Faculty">Faculty</option>
                 </select>
@@ -32,21 +32,16 @@
             <div id="studentFields">
                 <div class="form-group">
                     <label>College</label>
-                    <select id="college">
+                    <select id="college" onchange="updatePrograms()">
+                        <option value="">-- Select --</option>
                         <option value="CICS">CICS</option>
                         <option value="CEA">CEA</option>
                         <option value="CBA">CBA</option>
-                        <option value="CAS">CAS</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Course / Program</label>
-                    <select id="program">
-                        <option value="BSCS">BSCS</option>
-                        <option value="BSIT">BSIT</option>
-                        <option value="BSCE">BSCE</option>
-                        <option value="BSA">BSA</option>
-                    </select>
+                    <label>Program</label>
+                    <select id="program"><option value="">Select College First</option></select>
                 </div>
                 <div class="form-group">
                     <label>Year Level</label>
@@ -55,7 +50,6 @@
                         <option value="2nd Year">2nd Year</option>
                         <option value="3rd Year">3rd Year</option>
                         <option value="4th Year">4th Year</option>
-                        <option value="5th Year">5th Year</option>
                     </select>
                 </div>
             </div>
@@ -63,73 +57,95 @@
             <div id="facultyFields" class="hidden">
                 <div class="form-group">
                     <label>Department</label>
-                    <select id="department">
-                        <option value="Information Technology">Information Technology</option>
-                        <option value="Computer Science">Computer Science</option>
-                        <option value="General Education">General Education</option>
-                        <option value="Engineering">Engineering</option>
-                    </select>
+                    <input type="text" id="dept" placeholder="e.g. CICS">
                 </div>
                 <div class="form-group">
                     <label>Position</label>
-                    <select id="position">
-                        <option value="Instructor">Instructor</option>
-                        <option value="Assistant Professor">Assistant Professor</option>
-                        <option value="Associate Professor">Associate Professor</option>
-                        <option value="Professor">Professor</option>
-                    </select>
+                    <input type="text" id="pos" placeholder="e.g. Instructor">
                 </div>
             </div>
 
-            <button type="submit" class="submit-btn">Complete Registration</button>
+            <button type="submit" class="submit-btn">Finish Registration</button>
         </form>
     </div>
 
     <script>
-        function toggleFields() {
-            const role = document.getElementById('userRole').value;
-            const sFields = document.getElementById('studentFields');
-            const fFields = document.getElementById('facultyFields');
-            
-            if (role === 'Faculty') {
-                sFields.classList.add('hidden');
-                fFields.classList.remove('hidden');
+        const programData = { 
+            "CICS": ["BSCS", "BSIT", "BSIS"], 
+            "CEA": ["BSCE", "BSEE"], 
+            "CBA": ["BSA", "BSBA"] 
+        };
+
+        function updatePrograms() {
+            const college = document.getElementById('college').value;
+            const programSelect = document.getElementById('program');
+            programSelect.innerHTML = '';
+            if (programData[college]) {
+                programData[college].forEach(p => {
+                    let opt = new Option(p, p);
+                    programSelect.add(opt);
+                });
             } else {
-                sFields.classList.remove('hidden');
-                fFields.classList.add('hidden');
+                programSelect.add(new Option("Select College First", ""));
+            }
+        }
+
+        function toggleFields() {
+            const isStudent = document.getElementById('userRole').value === 'Student';
+            document.getElementById('studentFields').classList.toggle('hidden', !isStudent);
+            document.getElementById('facultyFields').classList.toggle('hidden', isStudent);
+            
+            // Clear inputs when toggling to avoid sending student data for a faculty role
+            if (isStudent) {
+                document.getElementById('dept').value = '';
+                document.getElementById('pos').value = '';
+            } else {
+                document.getElementById('college').value = '';
+                document.getElementById('program').innerHTML = '<option value="">Select College First</option>';
             }
         }
 
         document.getElementById('regForm').onsubmit = async (e) => {
             e.preventDefault();
             const role = document.getElementById('userRole').value;
+            const email = localStorage.getItem("userEmail");
+
+            if (!email) {
+                alert("Session expired. Please login again.");
+                window.location.href = "index.html";
+                return;
+            }
+
             const data = {
                 firstName: document.getElementById('fn').value,
                 lastName: document.getElementById('ln').value,
-                email: localStorage.getItem("userEmail"),
+                email: email,
                 role: role,
+                // These will be null if the role doesn't match
                 college: role === 'Student' ? document.getElementById('college').value : null,
                 program: role === 'Student' ? document.getElementById('program').value : null,
                 yearLevel: role === 'Student' ? document.getElementById('yearLevel').value : null,
-                department: role === 'Faculty' ? document.getElementById('department').value : null,
-                position: role === 'Faculty' ? document.getElementById('position').value : null,
+                department: role === 'Faculty' ? document.getElementById('dept').value : null,
+                position: role === 'Faculty' ? document.getElementById('pos').value : null,
                 reason: "Account Created"
             };
 
-            const res = await fetch('/api/visitors', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
+            try {
+                const res = await fetch('/api/visitors', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
 
-            if (res.ok) {
-                // Success overlay to cover the whole screen
-                const overlay = document.createElement('div');
-                overlay.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; background:white; display:flex; justify-content:center; align-items:center; z-index:10000;";
-                overlay.innerHTML = `<h1 style="color:#cc0000; font-size:48px; text-align:center;">Welcome to NEU Library!</h1>`;
-                document.body.appendChild(overlay);
-                
-                setTimeout(() => { window.location.href = "index.html"; }, 3000);
+                if (res.ok) {
+                    alert("Profile Registered Successfully!");
+                    window.location.href = "visitor_form.html"; 
+                } else {
+                    const errData = await res.json();
+                    alert("Error: " + (errData.error || "Failed to save profile."));
+                }
+            } catch (err) {
+                alert("Server connection failed.");
             }
         };
     </script>
