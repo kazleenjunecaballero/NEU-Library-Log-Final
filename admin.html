@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Admin Dashboard - NEU Library</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    
     <style>
         body { 
             font-family: 'Segoe UI', sans-serif; 
@@ -20,6 +23,12 @@
         .header { 
             display: flex; justify-content: space-between; align-items: center; 
             border-bottom: 3px solid #cc0000; padding-bottom: 10px; margin-bottom: 15px; flex-shrink: 0; 
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
         }
 
         /* --- STAT CARDS STYLE --- */
@@ -63,7 +72,11 @@
         td { padding: 10px; border-bottom: 1px solid #eee; font-size: 13px; }
 
         .badge { background: #eee; padding: 3px 7px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+        
+        /* Buttons */
         .logout-btn { background: #333; color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .export-btn { background: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .export-btn:hover { background: #218838; }
         .del-btn { color: #cc0000; cursor: pointer; border: 1px solid #cc0000; background: none; padding: 3px 8px; border-radius: 4px; }
         
         .table-container::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -78,7 +91,10 @@
                 <img src="New_Era_University.svg.png" width="40">
                 <h1 style="margin:0; font-size: 20px;">NEU Library Admin</h1>
             </div>
-            <button class="logout-btn" onclick="handleLogout()">Logout</button>
+            <div class="header-actions">
+                <button class="export-btn" onclick="exportToPDF()">Export PDF</button>
+                <button class="logout-btn" onclick="handleLogout()">Logout</button>
+            </div>
         </div>
 
         <div class="stats-row">
@@ -111,7 +127,7 @@
         </div>
 
         <div class="table-container">
-            <table>
+            <table id="visitorTable">
                 <thead>
                     <tr>
                         <th>Name & Email</th>
@@ -130,6 +146,7 @@
 
     <script>
         let allLogs = [];
+        let filteredLogs = [];
 
         function handleLogout() {
             localStorage.clear();
@@ -138,16 +155,15 @@
 
         async function loadDashboard() {
             try {
-                // Fetch Stats
                 const statsRes = await fetch('/api/visitors/stats');
                 const stats = await statsRes.json();
                 document.getElementById('statTotal').innerText = stats.total;
                 document.getElementById('statToday').innerText = stats.today;
                 document.getElementById('statWeek').innerText = stats.week;
 
-                // Fetch Table Data
                 const res = await fetch('/api/visitors');
                 allLogs = await res.json();
+                filteredLogs = allLogs; // Initialize filteredLogs
                 renderTable(allLogs);
             } catch (err) {
                 console.error(err);
@@ -164,7 +180,7 @@
                     <tr>
                         <td><strong>${v.firstName} ${v.lastName}</strong><br><small>${v.email}</small></td>
                         <td><span class="badge">${v.role}</span></td>
-                        <td>${v.role === 'Student' ? v.college + ' ('+v.yearLevel+')' : v.department}</td>
+                        <td>${v.role === 'Student' ? (v.college || 'N/A') + ' ('+(v.yearLevel || 'N/A')+')' : (v.department || 'N/A')}</td>
                         <td>${v.program || 'N/A'}</td>
                         <td style="color: #cc0000; font-weight:bold;">${v.reason}</td>
                         <td>${new Date(v.time).toLocaleString()}</td>
@@ -180,21 +196,60 @@
             const from = document.getElementById('dateFrom').value;
             const to = document.getElementById('dateTo').value;
 
-            const filtered = allLogs.filter(log => {
+            filteredLogs = allLogs.filter(log => {
                 const logDate = new Date(log.time).toISOString().split('T')[0];
                 const matchesSearch = JSON.stringify(log).toLowerCase().includes(search);
                 const matchesDate = (!from || logDate >= from) && (!to || logDate <= to);
                 return matchesSearch && matchesDate;
             });
 
-            renderTable(filtered);
+            renderTable(filteredLogs);
         }
 
         function resetFilters() {
             document.getElementById('universalSearch').value = '';
             document.getElementById('dateFrom').value = '';
             document.getElementById('dateTo').value = '';
+            filteredLogs = allLogs;
             renderTable(allLogs);
+        }
+
+        // PROFESSOR REQUIREMENT: EXPORT FILTERED DATA TO PDF
+        function exportToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4'); // Landscape orientation
+
+            // Add Header
+            doc.setFontSize(18);
+            doc.setTextColor(204, 0, 0); // NEU Red
+            doc.text("NEU Library Visitor Logs Report", 14, 20);
+            
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 28);
+            doc.text(`Total Records in Report: ${filteredLogs.length}`, 14, 33);
+
+            // Prepare Table Data
+            const tableRows = filteredLogs.map(v => [
+                `${v.firstName} ${v.lastName}\n${v.email}`,
+                v.role,
+                v.role === 'Student' ? `${v.college} (${v.yearLevel})` : v.department,
+                v.program || 'N/A',
+                v.reason,
+                new Date(v.time).toLocaleString()
+            ]);
+
+            doc.autoTable({
+                head: [['Name & Email', 'Role', 'College/Dept', 'Program', 'Purpose', 'Date/Time']],
+                body: tableRows,
+                startY: 40,
+                theme: 'striped',
+                headStyles: { fillColor: [204, 0, 0] }, // Red header
+                styles: { fontSize: 8 },
+                columnStyles: { 0: { cellWidth: 50 } }
+            });
+
+            doc.save(`NEU_Library_Logs_${new Date().toISOString().split('T')[0]}.pdf`);
         }
 
         async function deleteEntry(id) {
