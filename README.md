@@ -1,4 +1,4 @@
-# NEU Library Visitor Log
+# 📚 NEU Library Visitor Log System
 
 **Project Link:** [PASTE YOUR RENDER LINK HERE ONCE IT FINISHES]
 
@@ -7,14 +7,8 @@
 - **Features:** - Google Login implementation
   - Role-based access control
   - Visitor statistics filtered by College and Reason
-  # 📚 NEU Library Visitor Log System
 
 A full-stack web application designed for New Era University to manage and track library visitors. This project features institutional email validation, role-based access control, and an administrative dashboard.
-
-## 🚀 Live Demo
-**Project Link:** [PASTE YOUR RENDER LINK HERE]
-
----
 
 ## 🛠 Key Features
 
