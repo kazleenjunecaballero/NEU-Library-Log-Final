@@ -4,19 +4,60 @@
     <meta charset="UTF-8">
     <title>Complete Profile - NEU Library</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .reg-card { background: white; padding: 30px; border-radius: 15px; width: 400px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-size: 13px; color: #666; margin-bottom: 5px; font-weight: bold; }
-        select, input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            /* FIXED BACKGROUND: Added the same overlay and image as index/visitor forms */
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('background.jpg'); 
+            background-size: cover; 
+            background-position: center;
+            background-attachment: fixed; /* Keeps background still while scrolling */
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0; 
+        }
+        
+        .reg-card { 
+            background: rgba(255, 255, 255, 0.95); /* Slight transparency for a modern look */
+            padding: 30px; 
+            border-radius: 20px; 
+            width: 400px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+        }
+
+        .form-group { margin-bottom: 15px; text-align: left; }
+        label { display: block; font-size: 13px; color: #333; margin-bottom: 5px; font-weight: bold; }
+        
+        select, input { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            box-sizing: border-box; 
+            background: #fff;
+        }
+
         .hidden { display: none; }
-        .submit-btn { width: 100%; padding: 12px; background: #004a99; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .submit-btn:hover { background: #003366; }
+
+        .submit-btn { 
+            width: 100%; 
+            padding: 14px; 
+            background: #cc0000; 
+            color: white; 
+            border: none; 
+            border-radius: 10px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        .submit-btn:hover { background: #990000; }
     </style>
 </head>
 <body>
     <div class="reg-card">
-        <h2 style="color: #cc0000; text-align: center;">Register Profile</h2>
+        <h2 style="color: #cc0000; text-align: center; margin-top: 0;">Register Profile</h2>
         <form id="regForm">
             <div class="form-group"><label>First Name</label><input type="text" id="fn" required></div>
             <div class="form-group"><label>Last Name</label><input type="text" id="ln" required></div>
@@ -57,11 +98,21 @@
             <div id="facultyFields" class="hidden">
                 <div class="form-group">
                     <label>Department</label>
-                    <input type="text" id="dept" placeholder="e.g. CICS">
+                    <select id="dept">
+                        <option value="">-- Select Department --</option>
+                        <option value="CICS">CICS</option>
+                        <option value="CBA">CBA</option>
+                        <option value="CEA">CEA</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label>Position</label>
-                    <input type="text" id="pos" placeholder="e.g. Instructor">
+                    <select id="pos">
+                        <option value="">-- Select Position --</option>
+                        <option value="Instructor">Instructor</option>
+                        <option value="Professor">Professor</option>
+                        <option value="Staff">Staff</option>
+                    </select>
                 </div>
             </div>
 
@@ -70,21 +121,14 @@
     </div>
 
     <script>
-        const programData = { 
-            "CICS": ["BSCS", "BSIT", "BSIS"], 
-            "CEA": ["BSCE", "BSEE"], 
-            "CBA": ["BSA", "BSBA"] 
-        };
+        const programData = { "CICS": ["BSCS", "BSIT", "BSIS"], "CEA": ["BSCE", "BSEE"], "CBA": ["BSA", "BSBA"] };
 
         function updatePrograms() {
             const college = document.getElementById('college').value;
             const programSelect = document.getElementById('program');
             programSelect.innerHTML = '';
             if (programData[college]) {
-                programData[college].forEach(p => {
-                    let opt = new Option(p, p);
-                    programSelect.add(opt);
-                });
+                programData[college].forEach(p => programSelect.add(new Option(p, p)));
             } else {
                 programSelect.add(new Option("Select College First", ""));
             }
@@ -94,34 +138,16 @@
             const isStudent = document.getElementById('userRole').value === 'Student';
             document.getElementById('studentFields').classList.toggle('hidden', !isStudent);
             document.getElementById('facultyFields').classList.toggle('hidden', isStudent);
-            
-            // Clear inputs when toggling to avoid sending student data for a faculty role
-            if (isStudent) {
-                document.getElementById('dept').value = '';
-                document.getElementById('pos').value = '';
-            } else {
-                document.getElementById('college').value = '';
-                document.getElementById('program').innerHTML = '<option value="">Select College First</option>';
-            }
         }
 
         document.getElementById('regForm').onsubmit = async (e) => {
             e.preventDefault();
             const role = document.getElementById('userRole').value;
-            const email = localStorage.getItem("userEmail");
-
-            if (!email) {
-                alert("Session expired. Please login again.");
-                window.location.href = "index.html";
-                return;
-            }
-
             const data = {
                 firstName: document.getElementById('fn').value,
                 lastName: document.getElementById('ln').value,
-                email: email,
+                email: localStorage.getItem("userEmail"),
                 role: role,
-                // These will be null if the role doesn't match
                 college: role === 'Student' ? document.getElementById('college').value : null,
                 program: role === 'Student' ? document.getElementById('program').value : null,
                 yearLevel: role === 'Student' ? document.getElementById('yearLevel').value : null,
@@ -130,22 +156,15 @@
                 reason: "Account Created"
             };
 
-            try {
-                const res = await fetch('/api/visitors', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
+            const res = await fetch('/api/visitors', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
 
-                if (res.ok) {
-                    alert("Profile Registered Successfully!");
-                    window.location.href = "visitor_form.html"; 
-                } else {
-                    const errData = await res.json();
-                    alert("Error: " + (errData.error || "Failed to save profile."));
-                }
-            } catch (err) {
-                alert("Server connection failed.");
+            if (res.ok) {
+                alert("Profile Registered!");
+                window.location.href = "visitor_form.html";
             }
         };
     </script>

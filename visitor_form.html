@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>Log Your Visit - NEU Library</title>
-    <link rel="stylesheet" href="style.css">
     <style>
         body {
             font-family: 'Segoe UI', sans-serif;
+            /* Using the background from your earlier design */
             background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('background.jpg');
             background-size: cover; 
             background-position: center; 
@@ -16,16 +16,6 @@
             justify-content: center; 
             align-items: center;
             overflow: hidden;
-        }
-
-        /* Container for the logout button and the form */
-        #pageContent {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
             position: relative;
         }
 
@@ -37,20 +27,25 @@
             color: white;
             padding: 10px 20px;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
+            z-index: 2000; /* Stays above everything */
         }
 
         .form-card { 
-            background: white; 
+            background: rgba(255, 255, 255, 0.95); 
             padding: 40px; 
             border-radius: 20px; 
             width: 90%; 
             max-width: 450px; 
             text-align: center; 
             box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            z-index: 1000;
+            transition: all 0.3s ease;
         }
+
+        h2 { color: #333; margin-bottom: 20px; }
 
         select { 
             width: 100%; 
@@ -74,48 +69,24 @@
             font-size: 18px;
         }
 
-        /* Success Screen Full Overlay */
-        .success-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: white;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000; /* Ensures it covers the logout button */
-        }
-
-        .success-text {
+        /* Success Message Style */
+        .success-message h1 {
             color: #cc0000;
-            font-size: clamp(30px, 8vw, 60px);
+            font-size: 32px;
             font-weight: bold;
-            margin-bottom: 30px;
-            text-align: center;
+            margin: 0;
         }
 
-        .done-btn {
-            padding: 12px 30px;
-            background: #004a99;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 18px;
-            cursor: pointer;
-            font-weight: bold;
-        }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-    <div id="pageContent">
-        <button class="logout-btn" onclick="location.href='index.html'">Logout</button>
-        
-        <div class="form-card">
-            <h2 style="color: #333; margin-bottom: 20px;">What is your purpose?</h2>
+    <button class="logout-btn" onclick="handleLogout()">Logout</button>
+    
+    <div class="form-card" id="mainCard">
+        <div id="purposeStep">
+            <h2>What is your purpose?</h2>
             <select id="reason">
                 <option value="Study">Study / Research</option>
                 <option value="Borrow">Borrow / Return Books</option>
@@ -124,9 +95,18 @@
             </select>
             <button class="log-btn" onclick="submitVisit()">Log My Visit</button>
         </div>
+
+        <div id="successStep" class="hidden success-message">
+            <h1>Welcome to NEU Library!</h1>
+        </div>
     </div>
 
     <script>
+        function handleLogout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+
         async function submitVisit() {
             const email = localStorage.getItem("userEmail");
             const reason = document.getElementById('reason').value;
@@ -144,14 +124,15 @@
                 });
 
                 if (res.ok) {
-                    // This creates a fresh overlay that covers the entire screen, including the logout button
-                    const overlay = document.createElement('div');
-                    overlay.className = 'success-overlay';
-                    overlay.innerHTML = `
-                        <h1 class="success-text">Welcome to NEU Library!</h1>
-                        <button class="done-btn" onclick="window.location.href='index.html'">Done</button>
-                    `;
-                    document.body.appendChild(overlay);
+                    // Update the UI without refreshing or deleting the red logout button
+                    document.getElementById('purposeStep').classList.add('hidden');
+                    document.getElementById('successStep').classList.remove('hidden');
+                    
+                    // Optional: Automatically go back to login after 5 seconds
+                    setTimeout(() => {
+                        handleLogout();
+                    }, 5000);
+
                 } else {
                     alert("Error saving log.");
                 }
