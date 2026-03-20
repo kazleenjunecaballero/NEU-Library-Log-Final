@@ -18,82 +18,30 @@
             position: relative;
         }
 
-        /* Top Logout Button for manual exit before logging visit */
         .logout-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background-color: #cc0000;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            z-index: 2000;
-            transition: 0.3s;
-        }
-
-        .logout-btn:hover {
-            background-color: #333;
+            position: absolute; top: 20px; right: 20px;
+            background-color: #cc0000; color: white;
+            padding: 10px 20px; border: none; border-radius: 8px;
+            cursor: pointer; font-weight: bold; z-index: 2000;
         }
 
         .form-card { 
-            background: rgba(255, 255, 255, 0.95); 
-            padding: 40px; 
-            border-radius: 20px; 
-            width: 90%; 
-            max-width: 450px; 
-            text-align: center; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95); padding: 40px; 
+            border-radius: 20px; width: 90%; max-width: 450px; 
+            text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
         }
 
-        .neu-logo {
-            width: 100px;
-            margin-bottom: 20px;
-        }
+        .neu-logo { width: 100px; margin-bottom: 20px; }
+        
+        /* PROFESSOR'S WELCOME STYLE */
+        #welcomeMsg { color: #cc0000; font-weight: bold; margin-bottom: 10px; font-size: 18px; }
 
-        h2 { color: #333; margin-bottom: 20px; font-size: 22px; }
-
-        select { 
-            width: 100%; 
-            padding: 15px; 
-            border-radius: 10px; 
-            border: 2px solid #eee; 
-            font-size: 16px; 
-            margin-bottom: 20px; 
-            background-color: #f9f9f9;
-            outline: none;
-        }
-
-        select:focus {
-            border-color: #cc0000;
-        }
+        select { width: 100%; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
 
         .log-btn { 
-            width: 100%; 
-            background-color: #cc0000; 
-            color: white; 
-            padding: 15px; 
-            border: none; 
-            border-radius: 10px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            font-size: 18px;
-            transition: 0.3s;
-        }
-
-        .log-btn:hover {
-            background-color: #a30000;
-            transform: translateY(-2px);
-        }
-
-        .success-message h1 {
-            color: #cc0000;
-            font-size: 28px;
-            font-weight: bold;
-            margin: 0;
+            width: 100%; background-color: #cc0000; color: white; 
+            padding: 15px; border: none; border-radius: 10px; 
+            font-weight: bold; cursor: pointer; font-size: 18px;
         }
 
         .hidden { display: none; }
@@ -106,6 +54,9 @@
     <div class="form-card" id="mainCard">
         <div id="purposeStep">
             <img src="New_Era_University.svg.png" alt="NEU Logo" class="neu-logo">
+            
+            <div id="welcomeMsg">Loading session...</div>
+
             <h2>What is your purpose?</h2>
             <select id="reason">
                 <option value="Study">Study / Research</option>
@@ -119,12 +70,28 @@
         <div id="successStep" class="hidden">
             <img src="New_Era_University.svg.png" alt="NEU Logo" class="neu-logo">
             <div class="success-message">
-                <h1>Welcome to NEU Library!</h1>
+                <h1 style="color: #cc0000;">Welcome to NEU Library!</h1>
             </div>
         </div>
     </div>
 
     <script>
+        // PERSISTENT SESSION CHECK ON LOAD
+        window.onload = function() {
+            const name = localStorage.getItem("userName");
+            const program = localStorage.getItem("userProgram");
+            const email = localStorage.getItem("userEmail");
+
+            if (!email || !name) {
+                window.location.href = "index.html";
+                return;
+            }
+            
+            // DISPLAY THE WELCOME MESSAGE
+            document.getElementById('welcomeMsg').innerText = 
+                `Welcome ${name} of ${program}! Welcome to NEU Library!`;
+        }
+
         function handleLogout() {
             localStorage.clear();
             window.location.href = 'index.html';
@@ -134,11 +101,6 @@
             const email = localStorage.getItem("userEmail");
             const reason = document.getElementById('reason').value;
             const submitBtn = document.getElementById('submitBtn');
-
-            if (!email) {
-                window.location.href = "index.html";
-                return;
-            }
 
             submitBtn.disabled = true;
             submitBtn.innerText = "Processing...";
@@ -151,24 +113,18 @@
                 });
 
                 if (res.ok) {
-                    // Show the Welcome Message
                     document.getElementById('purposeStep').classList.add('hidden');
                     document.getElementById('successStep').classList.remove('hidden');
-                    
-                    // Wait 10 minutes (600,000 ms) before automatic logout
-                    setTimeout(() => {
-                        handleLogout();
-                    }, 600000); 
-
+                    // NO AUTO-LOGOUT HERE! Let them see the message.
                 } else {
                     alert("Error saving log.");
                     submitBtn.disabled = false;
-                    submitBtn.innerText = "Log My Visit";
                 }
             } catch (err) {
                 alert("Connection error.");
                 submitBtn.disabled = false;
-                submitBtn.innerText = "Log My Visit";
             }
         }
     </script>
+</body>
+</html>

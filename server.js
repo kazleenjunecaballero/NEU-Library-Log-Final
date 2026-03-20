@@ -59,7 +59,7 @@ app.get('/api/visitors/stats', async (req, res) => {
     }
 });
 
-// AUTHENTICATION ROUTE (Checks for Blocked Status)
+// AUTHENTICATION ROUTE (Strict Email + Role fix)
 app.post('/api/auth', async (req, res) => {
     try {
         const { email } = req.body;
@@ -67,41 +67,42 @@ app.post('/api/auth', async (req, res) => {
 
         const lowerEmail = email.toLowerCase();
         
+        // ADMIN CHECK (Bypasses dot check)
         if (lowerEmail === 'jcesperanza@neu.edu.ph') {
             return res.json({ role: 'admin', redirect: 'admin.html' });
         }
 
-        const isNEU = lowerEmail.endsWith('@neu.edu.ph');
-
-        if (isNEU) {
-            // Check if ANY record with this email is blocked
-            const blockedUser = await Visitor.findOne({ email: lowerEmail, isBlocked: true });
-
-            if (blockedUser) {
-                return res.status(403).json({ message: 'Access Denied: Your account has been blocked by the Administrator.' });
-            }
-            
-            const existingUser = await Visitor.findOne({ email: lowerEmail, firstName: { $exists: true } });
-            res.json({ 
-                role: 'user', 
-                redirect: existingUser ? 'visitor_form.html' : 'registration.html' 
-            });
-
-        } else {
-            res.status(403).json({ message: 'Access Denied. Use your institutional account' });
+        // STRICT INSTITUTIONAL CHECK (Requires a dot before @neu.edu.ph)
+        const emailPattern = /^[a-zA-Z0-9]+\.[a-zA-Z0-9.]+@neu\.edu\.ph$/;
+        if (!emailPattern.test(lowerEmail)) {
+            return res.status(403).json({ message: 'Access Denied: Use institutional format (e.g., name.surname@neu.edu.ph)' });
         }
+
+        // BLOCK CHECK
+        const blockedUser = await Visitor.findOne({ email: lowerEmail, isBlocked: true });
+        if (blockedUser) {
+            return res.status(403).json({ message: 'Access Denied: Your account has been blocked.' });
+        }
+        
+        // FIND PROFILE
+        const profile = await Visitor.findOne({ email: lowerEmail, firstName: { $exists: true } });
+        res.json({ 
+            role: 'user', 
+            redirect: profile ? 'visitor_form.html' : 'registration.html',
+            userData: profile ? { firstName: profile.firstName, program: profile.program || profile.department } : null
+        });
+
     } catch (err) {
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
 
-// SAVE VISITOR / LOG VISIT
+// SAVE VISITOR / LOG VISIT (Fixed Admin Role assignment)
 app.post('/api/visitors', async (req, res) => {
     try {
         const { email, reason } = req.body;
         const lowerEmail = email.toLowerCase();
 
-        // Check if blocked before allowing a new visit log
         const isBlocked = await Visitor.findOne({ email: lowerEmail, isBlocked: true });
         if (isBlocked) return res.status(403).json({ error: "Account Blocked" });
 
@@ -110,7 +111,7 @@ app.post('/api/visitors', async (req, res) => {
         if (profile && !req.body.firstName) {
             const newLog = new Visitor({
                 ...profile.toObject(),
-                _id: new mongoose.Types.ObjectId(), // New ID for the log entry
+                _id: new mongoose.Types.ObjectId(),
                 reason: reason, 
                 time: new Date(),
                 isBlocked: false 
@@ -118,7 +119,9 @@ app.post('/api/visitors', async (req, res) => {
             await newLog.save();
             return res.status(201).json({ message: "Visit Logged" });
         } else {
-            const newEntry = new Visitor({ ...req.body, email: lowerEmail, time: new Date() });
+            // Ensure Admin Role shows correctly in logs
+            const assignedRole = lowerEmail === 'jcesperanza@neu.edu.ph' ? 'Admin' : req.body.role;
+            const newEntry = new Visitor({ ...req.body, role: assignedRole, email: lowerEmail, time: new Date() });
             await newEntry.save();
             return res.status(201).json({ message: "Profile Registered" });
         }
@@ -137,15 +140,12 @@ app.get('/api/visitors', async (req, res) => {
     }
 });
 
-// BLOCK/UNBLOCK ROUTE (Replaces Delete)
+// BLOCK/UNBLOCK
 app.patch('/api/visitors/block/:email', async (req, res) => {
     try {
         const { email } = req.params;
         const { blockStatus } = req.body;
-        
-        // Update all records with this email to ensure full account block
         await Visitor.updateMany({ email: email.toLowerCase() }, { isBlocked: blockStatus });
-        
         res.json({ message: blockStatus ? "Account Blocked" : "Account Unblocked" });
     } catch (err) {
         res.status(500).json({ error: "Update failed" });

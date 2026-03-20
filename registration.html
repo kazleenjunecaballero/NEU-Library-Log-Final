@@ -6,11 +6,10 @@
     <style>
         body { 
             font-family: 'Segoe UI', sans-serif; 
-            /* FIXED BACKGROUND: Added the same overlay and image as index/visitor forms */
             background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('background.jpg'); 
             background-size: cover; 
             background-position: center;
-            background-attachment: fixed; /* Keeps background still while scrolling */
+            background-attachment: fixed;
             display: flex; 
             justify-content: center; 
             align-items: center; 
@@ -19,7 +18,7 @@
         }
         
         .reg-card { 
-            background: rgba(255, 255, 255, 0.95); /* Slight transparency for a modern look */
+            background: rgba(255, 255, 255, 0.95); 
             padding: 30px; 
             border-radius: 20px; 
             width: 400px; 
@@ -143,13 +142,16 @@
         document.getElementById('regForm').onsubmit = async (e) => {
             e.preventDefault();
             const role = document.getElementById('userRole').value;
+            const firstName = document.getElementById('fn').value;
+            const program = role === 'Student' ? document.getElementById('program').value : document.getElementById('dept').value;
+
             const data = {
-                firstName: document.getElementById('fn').value,
+                firstName: firstName,
                 lastName: document.getElementById('ln').value,
                 email: localStorage.getItem("userEmail"),
                 role: role,
                 college: role === 'Student' ? document.getElementById('college').value : null,
-                program: role === 'Student' ? document.getElementById('program').value : null,
+                program: program,
                 yearLevel: role === 'Student' ? document.getElementById('yearLevel').value : null,
                 department: role === 'Faculty' ? document.getElementById('dept').value : null,
                 position: role === 'Faculty' ? document.getElementById('pos').value : null,
@@ -163,6 +165,9 @@
             });
 
             if (res.ok) {
+                // START SESSION IMMEDIATELY
+                localStorage.setItem("userName", firstName);
+                localStorage.setItem("userProgram", program);
                 alert("Profile Registered!");
                 window.location.href = "visitor_form.html";
             }

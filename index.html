@@ -7,7 +7,6 @@
     <style>
         body {
             font-family: 'Segoe UI', sans-serif;
-            /* Make sure background.jpg is in your folder for this to show */
             background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('background.jpg'); 
             background-size: cover; 
             background-position: center;
@@ -60,7 +59,7 @@
     <script>
     async function handleLogin() {
         const emailInput = document.getElementById('userEmail');
-        const email = emailInput.value.trim();
+        const email = emailInput.value.trim().toLowerCase();
 
         if (!email) {
             alert("Please enter your email.");
@@ -77,18 +76,21 @@
             const data = await res.json();
 
             if (res.ok) {
-                // Save email so registration and visitor forms can use it
-                localStorage.setItem("userEmail", email.toLowerCase());
-                
-                // Redirect based on what the server decided (admin, register, or log visit)
+                // START SESSION
+                localStorage.setItem("userEmail", email);
+                if (data.userData) {
+                    localStorage.setItem("userName", data.userData.firstName);
+                    localStorage.setItem("userProgram", data.userData.program);
+                }
                 window.location.href = data.redirect; 
             } else {
-                // This will now show "Access Denied. Use format: firstname.lastname@neu.edu.ph"
                 alert(data.message || "Invalid Email");
             }
         } catch (err) {
             console.error("Login Error:", err);
-            alert("Server connection failed. Make sure your server is running!");
+            alert("Server connection failed.");
         }
     }
 </script>
+</body>
+</html>
