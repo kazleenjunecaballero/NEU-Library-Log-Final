@@ -1,6 +1,6 @@
 # 📚 NEU Library Visitor Log System
 
-**Project Link:** [PASTE YOUR RENDER LINK HERE ONCE IT FINISHES]
+**Project Link:** [https://neu-library-log-final.onrender.com]
 
 ### Professor Access
 - **Admin Email:** jcesperanza@neu.edu.ph
