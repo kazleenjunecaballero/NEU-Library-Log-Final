@@ -25,28 +25,13 @@
             border-bottom: 3px solid #cc0000; padding-bottom: 10px; margin-bottom: 15px; flex-shrink: 0; 
         }
 
-        .header-actions {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
+        .header-actions { display: flex; gap: 10px; align-items: center; }
 
-        /* --- STAT CARDS STYLE --- */
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            margin-bottom: 15px;
-            flex-shrink: 0;
-        }
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 15px; flex-shrink: 0; }
 
         .stat-card {
-            background: white;
-            padding: 15px;
-            border-radius: 10px;
-            border-left: 5px solid #cc0000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            text-align: center;
+            background: white; padding: 15px; border-radius: 10px; border-left: 5px solid #cc0000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center;
         }
 
         .stat-card h3 { margin: 0; font-size: 14px; color: #666; text-transform: uppercase; }
@@ -57,28 +42,25 @@
             background: #f9f9f9; padding: 10px; border-radius: 8px;
         }
 
-        .filter-section input { padding: 8px; border-radius: 5px; border: 1px solid #ddd; }
-
         .table-container { 
             width: 100%; overflow-y: auto; overflow-x: auto; flex-grow: 1; 
             border: 1px solid #eee; border-radius: 8px; background: white;
         }
 
         table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 1100px; }
-        th { 
-            background: #cc0000; color: white; padding: 12px; text-align: left; 
-            position: sticky; top: 0; z-index: 10;
-        }
+        th { background: #cc0000; color: white; padding: 12px; text-align: left; position: sticky; top: 0; z-index: 10; }
         td { padding: 10px; border-bottom: 1px solid #eee; font-size: 13px; }
 
         .badge { background: #eee; padding: 3px 7px; border-radius: 4px; font-size: 10px; font-weight: bold; }
-        
-        /* Buttons */
+        .badge-blocked { background: #ff4444; color: white; }
+
         .logout-btn { background: #333; color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .export-btn { background: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .export-btn:hover { background: #218838; }
-        .del-btn { color: #cc0000; cursor: pointer; border: 1px solid #cc0000; background: none; padding: 3px 8px; border-radius: 4px; }
         
+        /* Action Buttons */
+        .btn-block { color: #cc0000; border: 1px solid #cc0000; background: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-unblock { color: #666; border: 1px solid #666; background: #eee; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+
         .table-container::-webkit-scrollbar { width: 8px; height: 8px; }
         .table-container::-webkit-scrollbar-thumb { background: #cc0000; border-radius: 4px; }
     </style>
@@ -98,36 +80,21 @@
         </div>
 
         <div class="stats-row">
-            <div class="stat-card">
-                <h3>Total Visitors</h3>
-                <p id="statTotal">0</p>
-            </div>
-            <div class="stat-card">
-                <h3>Today</h3>
-                <p id="statToday">0</p>
-            </div>
-            <div class="stat-card">
-                <h3>This Week</h3>
-                <p id="statWeek">0</p>
-            </div>
-            <div class="stat-card" style="border-left-color: #333;">
-                <h3>Filtered Result</h3>
-                <p id="statFiltered">0</p>
-            </div>
+            <div class="stat-card"><h3>Total Visitors</h3><p id="statTotal">0</p></div>
+            <div class="stat-card"><h3>Today</h3><p id="statToday">0</p></div>
+            <div class="stat-card"><h3>This Week</h3><p id="statWeek">0</p></div>
+            <div class="stat-card" style="border-left-color: #333;"><h3>Filtered Result</h3><p id="statFiltered">0</p></div>
         </div>
 
         <div class="filter-section">
-            <strong style="font-size: 14px;">Filter Logs:</strong>
-            <input type="text" id="universalSearch" placeholder="Search anything..." onkeyup="filterData()">
-            <label style="font-size:12px; margin-left:10px;">From:</label>
-            <input type="date" id="dateFrom" onchange="filterData()">
-            <label style="font-size:12px;">To:</label>
-            <input type="date" id="dateTo" onchange="filterData()">
+            <input type="text" id="universalSearch" placeholder="Search anything..." onkeyup="filterData()" style="padding:8px; border-radius:5px; border:1px solid #ddd;">
+            <input type="date" id="dateFrom" onchange="filterData()" style="padding:8px;">
+            <input type="date" id="dateTo" onchange="filterData()" style="padding:8px;">
             <button onclick="resetFilters()" style="padding: 8px; cursor:pointer;">Reset</button>
         </div>
 
         <div class="table-container">
-            <table id="visitorTable">
+            <table>
                 <thead>
                     <tr>
                         <th>Name & Email</th>
@@ -136,7 +103,7 @@
                         <th>Program</th>
                         <th>Purpose</th>
                         <th>Date/Time</th>
-                        <th>Action</th>
+                        <th>Account Control</th>
                     </tr>
                 </thead>
                 <tbody id="visitorBody"></tbody>
@@ -148,26 +115,22 @@
         let allLogs = [];
         let filteredLogs = [];
 
-        function handleLogout() {
-            localStorage.clear();
-            window.location.href = 'index.html';
-        }
-
         async function loadDashboard() {
             try {
-                const statsRes = await fetch('/api/visitors/stats');
+                const [statsRes, logsRes] = await Promise.all([
+                    fetch('/api/visitors/stats'),
+                    fetch('/api/visitors')
+                ]);
                 const stats = await statsRes.json();
+                allLogs = await logsRes.json();
+                
                 document.getElementById('statTotal').innerText = stats.total;
                 document.getElementById('statToday').innerText = stats.today;
                 document.getElementById('statWeek').innerText = stats.week;
-
-                const res = await fetch('/api/visitors');
-                allLogs = await res.json();
-                filteredLogs = allLogs; // Initialize filteredLogs
+                
+                filteredLogs = allLogs;
                 renderTable(allLogs);
-            } catch (err) {
-                console.error(err);
-            }
+            } catch (err) { console.error(err); }
         }
 
         function renderTable(data) {
@@ -176,19 +139,41 @@
             document.getElementById('statFiltered').innerText = data.length;
 
             data.forEach(v => {
+                const isBlocked = v.isBlocked === true;
                 const row = `
-                    <tr>
-                        <td><strong>${v.firstName} ${v.lastName}</strong><br><small>${v.email}</small></td>
+                    <tr style="${isBlocked ? 'background: #fffafa;' : ''}">
+                        <td>
+                            <strong>${v.firstName} ${v.lastName}</strong>
+                            ${isBlocked ? '<span class="badge badge-blocked">BLOCKED</span>' : ''}
+                            <br><small>${v.email}</small>
+                        </td>
                         <td><span class="badge">${v.role}</span></td>
                         <td>${v.role === 'Student' ? (v.college || 'N/A') + ' ('+(v.yearLevel || 'N/A')+')' : (v.department || 'N/A')}</td>
                         <td>${v.program || 'N/A'}</td>
                         <td style="color: #cc0000; font-weight:bold;">${v.reason}</td>
                         <td>${new Date(v.time).toLocaleString()}</td>
-                        <td><button class="del-btn" onclick="deleteEntry('${v._id}')">Delete</button></td>
+                        <td>
+                            <button class="${isBlocked ? 'btn-unblock' : 'btn-block'}" 
+                                onclick="toggleBlock('${v.email}', ${!isBlocked})">
+                                ${isBlocked ? 'Unblock User' : 'Block User'}
+                            </button>
+                        </td>
                     </tr>
                 `;
                 tbody.insertAdjacentHTML('beforeend', row);
             });
+        }
+
+        async function toggleBlock(email, newStatus) {
+            const action = newStatus ? "BLOCK" : "UNBLOCK";
+            if(confirm(`Are you sure you want to ${action} this account?`)) {
+                await fetch(`/api/visitors/block/${email}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ blockStatus: newStatus })
+                });
+                loadDashboard();
+            }
         }
 
         function filterData() {
@@ -202,7 +187,6 @@
                 const matchesDate = (!from || logDate >= from) && (!to || logDate <= to);
                 return matchesSearch && matchesDate;
             });
-
             renderTable(filteredLogs);
         }
 
@@ -214,24 +198,15 @@
             renderTable(allLogs);
         }
 
-        // PROFESSOR REQUIREMENT: EXPORT FILTERED DATA TO PDF
         function exportToPDF() {
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('l', 'mm', 'a4'); // Landscape orientation
-
-            // Add Header
+            const doc = new jsPDF('l', 'mm', 'a4');
             doc.setFontSize(18);
-            doc.setTextColor(204, 0, 0); // NEU Red
+            doc.setTextColor(204, 0, 0);
             doc.text("NEU Library Visitor Logs Report", 14, 20);
             
-            doc.setFontSize(10);
-            doc.setTextColor(100);
-            doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 28);
-            doc.text(`Total Records in Report: ${filteredLogs.length}`, 14, 33);
-
-            // Prepare Table Data
             const tableRows = filteredLogs.map(v => [
-                `${v.firstName} ${v.lastName}\n${v.email}`,
+                `${v.firstName} ${v.lastName}${v.isBlocked ? ' (BLOCKED)' : ''}\n${v.email}`,
                 v.role,
                 v.role === 'Student' ? `${v.college} (${v.yearLevel})` : v.department,
                 v.program || 'N/A',
@@ -242,23 +217,14 @@
             doc.autoTable({
                 head: [['Name & Email', 'Role', 'College/Dept', 'Program', 'Purpose', 'Date/Time']],
                 body: tableRows,
-                startY: 40,
+                startY: 30,
                 theme: 'striped',
-                headStyles: { fillColor: [204, 0, 0] }, // Red header
-                styles: { fontSize: 8 },
-                columnStyles: { 0: { cellWidth: 50 } }
+                headStyles: { fillColor: [204, 0, 0] }
             });
-
-            doc.save(`NEU_Library_Logs_${new Date().toISOString().split('T')[0]}.pdf`);
+            doc.save(`NEU_Library_Report.pdf`);
         }
 
-        async function deleteEntry(id) {
-            if(confirm("Delete this log?")) {
-                await fetch(`/api/visitors/${id}`, { method: 'DELETE' });
-                loadDashboard();
-            }
-        }
-
+        function handleLogout() { localStorage.clear(); window.location.href = 'index.html'; }
         loadDashboard();
     </script>
 </body>

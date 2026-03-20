@@ -34,16 +34,13 @@ const visitorSchema = new mongoose.Schema({
 
 const Visitor = mongoose.model('Visitor', visitorSchema);
 
-// --- NEW STATS ROUTE FOR PROFESSOR REQUIREMENTS ---
+// STATS ROUTE
 app.get('/api/visitors/stats', async (req, res) => {
     try {
         const now = new Date();
-        
-        // Start of Today (00:00:00)
         const startOfDay = new Date(now);
         startOfDay.setHours(0, 0, 0, 0);
 
-        // Start of the Week (Sunday)
         const startOfWeek = new Date(now);
         const day = now.getDay(); 
         const diff = now.getDate() - day; 
@@ -58,12 +55,11 @@ app.get('/api/visitors/stats', async (req, res) => {
 
         res.json({ total, today, week });
     } catch (err) {
-        console.error("Stats Error:", err);
         res.status(500).json({ error: "Failed to fetch statistics" });
     }
 });
 
-// AUTHENTICATION ROUTE
+// AUTHENTICATION ROUTE (Checks for Blocked Status)
 app.post('/api/auth', async (req, res) => {
     try {
         const { email } = req.body;
@@ -75,16 +71,17 @@ app.post('/api/auth', async (req, res) => {
             return res.json({ role: 'admin', redirect: 'admin.html' });
         }
 
-        const hasDot = lowerEmail.includes('.') && lowerEmail.split('@')[0].includes('.');
         const isNEU = lowerEmail.endsWith('@neu.edu.ph');
 
-        if (isNEU && hasDot) {
-            const existingUser = await Visitor.findOne({ email: lowerEmail, firstName: { $exists: true } });
+        if (isNEU) {
+            // Check if ANY record with this email is blocked
+            const blockedUser = await Visitor.findOne({ email: lowerEmail, isBlocked: true });
 
-            if (existingUser && existingUser.isBlocked) {
-                return res.status(403).json({ message: 'Access Denied: Account Blocked.' });
+            if (blockedUser) {
+                return res.status(403).json({ message: 'Access Denied: Your account has been blocked by the Administrator.' });
             }
             
+            const existingUser = await Visitor.findOne({ email: lowerEmail, firstName: { $exists: true } });
             res.json({ 
                 role: 'user', 
                 redirect: existingUser ? 'visitor_form.html' : 'registration.html' 
@@ -94,19 +91,7 @@ app.post('/api/auth', async (req, res) => {
             res.status(403).json({ message: 'Access Denied. Use your institutional account' });
         }
     } catch (err) {
-        console.error("Auth Error:", err);
         res.status(500).json({ error: "Internal Server Error" });
-    }
-});
-
-// CHECK ROUTE
-app.get('/api/visitors/check', async (req, res) => {
-    try {
-        const { email } = req.query;
-        const visitor = await Visitor.findOne({ email: email.toLowerCase(), firstName: { $exists: true } });
-        res.json({ exists: !!visitor });
-    } catch (err) {
-        res.status(500).json({ error: "Check failed" });
     }
 });
 
@@ -116,35 +101,28 @@ app.post('/api/visitors', async (req, res) => {
         const { email, reason } = req.body;
         const lowerEmail = email.toLowerCase();
 
+        // Check if blocked before allowing a new visit log
+        const isBlocked = await Visitor.findOne({ email: lowerEmail, isBlocked: true });
+        if (isBlocked) return res.status(403).json({ error: "Account Blocked" });
+
         const profile = await Visitor.findOne({ email: lowerEmail, firstName: { $exists: true } });
 
         if (profile && !req.body.firstName) {
             const newLog = new Visitor({
-                firstName: profile.firstName,
-                lastName: profile.lastName,
-                email: profile.email,
-                role: profile.role,
-                college: profile.college,
-                program: profile.program,
-                yearLevel: profile.yearLevel,
-                department: profile.department,
-                position: profile.position,
+                ...profile.toObject(),
+                _id: new mongoose.Types.ObjectId(), // New ID for the log entry
                 reason: reason, 
-                time: new Date()
+                time: new Date(),
+                isBlocked: false 
             });
             await newLog.save();
             return res.status(201).json({ message: "Visit Logged" });
         } else {
-            const newEntry = new Visitor({
-                ...req.body,
-                email: lowerEmail,
-                time: new Date()
-            });
+            const newEntry = new Visitor({ ...req.body, email: lowerEmail, time: new Date() });
             await newEntry.save();
             return res.status(201).json({ message: "Profile Registered" });
         }
     } catch (err) {
-        console.error("Save Error:", err);
         res.status(500).json({ error: "Failed to save data" });
     }
 });
@@ -159,17 +137,21 @@ app.get('/api/visitors', async (req, res) => {
     }
 });
 
-// DELETE LOG
-app.delete('/api/visitors/:id', async (req, res) => {
+// BLOCK/UNBLOCK ROUTE (Replaces Delete)
+app.patch('/api/visitors/block/:email', async (req, res) => {
     try {
-        await Visitor.findByIdAndDelete(req.params.id);
-        res.json({ message: "Deleted" });
+        const { email } = req.params;
+        const { blockStatus } = req.body;
+        
+        // Update all records with this email to ensure full account block
+        await Visitor.updateMany({ email: email.toLowerCase() }, { isBlocked: blockStatus });
+        
+        res.json({ message: blockStatus ? "Account Blocked" : "Account Unblocked" });
     } catch (err) {
-        res.status(500).json({ error: "Delete failed" });
+        res.status(500).json({ error: "Update failed" });
     }
 });
 
-// Listen on '0.0.0.0' for Render compatibility
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`);
 });
