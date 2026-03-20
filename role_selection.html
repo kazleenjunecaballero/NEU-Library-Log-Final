@@ -57,22 +57,21 @@
     </div>
 
     <script>
-        // Use the saved email to check if admin is already registered as a visitor
         async function goToUser() {
             const email = localStorage.getItem("userEmail");
             
             try {
-                // We check the server to see if the admin has a visitor profile yet
                 const res = await fetch(`/api/visitors/check?email=${email}`);
                 const data = await res.json();
 
                 if (data.exists) {
+                    localStorage.setItem("userName", data.userData.firstName);
+                    localStorage.setItem("userProgram", data.userData.program);
                     window.location.href = 'visitor_form.html';
                 } else {
                     window.location.href = 'registration.html';
                 }
             } catch (err) {
-                // If the check fails, default to registration
                 window.location.href = 'registration.html';
             }
         }

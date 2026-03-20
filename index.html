@@ -76,12 +76,12 @@
             const data = await res.json();
 
             if (res.ok) {
-                // START SESSION
                 localStorage.setItem("userEmail", email);
                 if (data.userData) {
                     localStorage.setItem("userName", data.userData.firstName);
                     localStorage.setItem("userProgram", data.userData.program);
                 }
+                // This redirect handles both regular users and the selection page for Admin
                 window.location.href = data.redirect; 
             } else {
                 alert(data.message || "Invalid Email");

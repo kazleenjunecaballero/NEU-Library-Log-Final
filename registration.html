@@ -7,49 +7,20 @@
         body { 
             font-family: 'Segoe UI', sans-serif; 
             background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('background.jpg'); 
-            background-size: cover; 
-            background-position: center;
-            background-attachment: fixed;
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh; 
-            margin: 0; 
+            background-size: cover; background-position: center; background-attachment: fixed;
+            display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; 
         }
-        
         .reg-card { 
-            background: rgba(255, 255, 255, 0.95); 
-            padding: 30px; 
-            border-radius: 20px; 
-            width: 400px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+            background: rgba(255, 255, 255, 0.95); padding: 30px; 
+            border-radius: 20px; width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
         }
-
         .form-group { margin-bottom: 15px; text-align: left; }
         label { display: block; font-size: 13px; color: #333; margin-bottom: 5px; font-weight: bold; }
-        
-        select, input { 
-            width: 100%; 
-            padding: 12px; 
-            border: 1px solid #ddd; 
-            border-radius: 8px; 
-            box-sizing: border-box; 
-            background: #fff;
-        }
-
+        select, input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; background: #fff; }
         .hidden { display: none; }
-
         .submit-btn { 
-            width: 100%; 
-            padding: 14px; 
-            background: #cc0000; 
-            color: white; 
-            border: none; 
-            border-radius: 10px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            font-size: 16px;
-            margin-top: 10px;
+            width: 100%; padding: 14px; background: #cc0000; color: white; 
+            border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px;
         }
         .submit-btn:hover { background: #990000; }
     </style>
@@ -60,7 +31,6 @@
         <form id="regForm">
             <div class="form-group"><label>First Name</label><input type="text" id="fn" required></div>
             <div class="form-group"><label>Last Name</label><input type="text" id="ln" required></div>
-            
             <div class="form-group">
                 <label>I am a:</label>
                 <select id="userRole" onchange="toggleFields()">
@@ -68,7 +38,6 @@
                     <option value="Faculty">Faculty</option>
                 </select>
             </div>
-
             <div id="studentFields">
                 <div class="form-group">
                     <label>College</label>
@@ -93,7 +62,6 @@
                     </select>
                 </div>
             </div>
-
             <div id="facultyFields" class="hidden">
                 <div class="form-group">
                     <label>Department</label>
@@ -114,14 +82,12 @@
                     </select>
                 </div>
             </div>
-
             <button type="submit" class="submit-btn">Finish Registration</button>
         </form>
     </div>
 
     <script>
         const programData = { "CICS": ["BSCS", "BSIT", "BSIS"], "CEA": ["BSCE", "BSEE"], "CBA": ["BSA", "BSBA"] };
-
         function updatePrograms() {
             const college = document.getElementById('college').value;
             const programSelect = document.getElementById('program');
@@ -132,13 +98,11 @@
                 programSelect.add(new Option("Select College First", ""));
             }
         }
-
         function toggleFields() {
             const isStudent = document.getElementById('userRole').value === 'Student';
             document.getElementById('studentFields').classList.toggle('hidden', !isStudent);
             document.getElementById('facultyFields').classList.toggle('hidden', isStudent);
         }
-
         document.getElementById('regForm').onsubmit = async (e) => {
             e.preventDefault();
             const role = document.getElementById('userRole').value;
@@ -165,7 +129,6 @@
             });
 
             if (res.ok) {
-                // START SESSION IMMEDIATELY
                 localStorage.setItem("userName", firstName);
                 localStorage.setItem("userProgram", program);
                 alert("Profile Registered!");

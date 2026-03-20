@@ -34,6 +34,17 @@ const visitorSchema = new mongoose.Schema({
 
 const Visitor = mongoose.model('Visitor', visitorSchema);
 
+// NEW: Check if a profile exists (Used by Role Selection)
+app.get('/api/visitors/check', async (req, res) => {
+    try {
+        const { email } = req.query;
+        const profile = await Visitor.findOne({ email: email.toLowerCase(), firstName: { $exists: true } });
+        res.json({ exists: !!profile, userData: profile ? { firstName: profile.firstName, program: profile.program || profile.department } : null });
+    } catch (err) {
+        res.status(500).json({ error: "Check failed" });
+    }
+});
+
 // STATS ROUTE
 app.get('/api/visitors/stats', async (req, res) => {
     try {
@@ -67,9 +78,9 @@ app.post('/api/auth', async (req, res) => {
 
         const lowerEmail = email.toLowerCase();
         
-        // ADMIN CHECK (Bypasses dot check)
+        // ADMIN CHECK (Bypasses dot check, goes to Selection)
         if (lowerEmail === 'jcesperanza@neu.edu.ph') {
-            return res.json({ role: 'admin', redirect: 'admin.html' });
+            return res.json({ role: 'admin', redirect: 'role_selection.html' });
         }
 
         // STRICT INSTITUTIONAL CHECK (Requires a dot before @neu.edu.ph)
@@ -97,7 +108,7 @@ app.post('/api/auth', async (req, res) => {
     }
 });
 
-// SAVE VISITOR / LOG VISIT (Fixed Admin Role assignment)
+// SAVE VISITOR / LOG VISIT
 app.post('/api/visitors', async (req, res) => {
     try {
         const { email, reason } = req.body;
@@ -119,7 +130,6 @@ app.post('/api/visitors', async (req, res) => {
             await newLog.save();
             return res.status(201).json({ message: "Visit Logged" });
         } else {
-            // Ensure Admin Role shows correctly in logs
             const assignedRole = lowerEmail === 'jcesperanza@neu.edu.ph' ? 'Admin' : req.body.role;
             const newEntry = new Visitor({ ...req.body, role: assignedRole, email: lowerEmail, time: new Date() });
             await newEntry.save();
@@ -130,7 +140,6 @@ app.post('/api/visitors', async (req, res) => {
     }
 });
 
-// GET ALL VISITORS
 app.get('/api/visitors', async (req, res) => {
     try {
         const logs = await Visitor.find().sort({ time: -1 });
@@ -140,7 +149,6 @@ app.get('/api/visitors', async (req, res) => {
     }
 });
 
-// BLOCK/UNBLOCK
 app.patch('/api/visitors/block/:email', async (req, res) => {
     try {
         const { email } = req.params;

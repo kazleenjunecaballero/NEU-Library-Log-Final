@@ -32,18 +32,13 @@
         }
 
         .neu-logo { width: 100px; margin-bottom: 20px; }
-        
-        /* PROFESSOR'S WELCOME STYLE */
         #welcomeMsg { color: #cc0000; font-weight: bold; margin-bottom: 10px; font-size: 18px; }
-
         select { width: 100%; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
-
         .log-btn { 
             width: 100%; background-color: #cc0000; color: white; 
             padding: 15px; border: none; border-radius: 10px; 
             font-weight: bold; cursor: pointer; font-size: 18px;
         }
-
         .hidden { display: none; }
     </style>
 </head>
@@ -54,9 +49,7 @@
     <div class="form-card" id="mainCard">
         <div id="purposeStep">
             <img src="New_Era_University.svg.png" alt="NEU Logo" class="neu-logo">
-            
             <div id="welcomeMsg">Loading session...</div>
-
             <h2>What is your purpose?</h2>
             <select id="reason">
                 <option value="Study">Study / Research</option>
@@ -76,7 +69,6 @@
     </div>
 
     <script>
-        // PERSISTENT SESSION CHECK ON LOAD
         window.onload = function() {
             const name = localStorage.getItem("userName");
             const program = localStorage.getItem("userProgram");
@@ -86,8 +78,6 @@
                 window.location.href = "index.html";
                 return;
             }
-            
-            // DISPLAY THE WELCOME MESSAGE
             document.getElementById('welcomeMsg').innerText = 
                 `Welcome ${name} of ${program}! Welcome to NEU Library!`;
         }
@@ -115,7 +105,6 @@
                 if (res.ok) {
                     document.getElementById('purposeStep').classList.add('hidden');
                     document.getElementById('successStep').classList.remove('hidden');
-                    // NO AUTO-LOGOUT HERE! Let them see the message.
                 } else {
                     alert("Error saving log.");
                     submitBtn.disabled = false;
