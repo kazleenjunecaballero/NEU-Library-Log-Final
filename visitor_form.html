@@ -119,14 +119,12 @@
         <div id="successStep" class="hidden">
             <img src="New_Era_University.svg.png" alt="NEU Logo" class="neu-logo">
             <div class="success-message">
-                <h1>Success!</h1>
-                <p style="color: #666; margin-top: 10px;">Logging you out...</p>
+                <h1>Welcome to NEU Library!</h1>
             </div>
         </div>
     </div>
 
     <script>
-        // Clears session and returns to login page
         function handleLogout() {
             localStorage.clear();
             window.location.href = 'index.html';
@@ -137,13 +135,11 @@
             const reason = document.getElementById('reason').value;
             const submitBtn = document.getElementById('submitBtn');
 
-            // Basic check to ensure user is logged in
             if (!email) {
                 window.location.href = "index.html";
                 return;
             }
 
-            // Disable button to prevent double-clicking
             submitBtn.disabled = true;
             submitBtn.innerText = "Processing...";
 
@@ -155,25 +151,24 @@
                 });
 
                 if (res.ok) {
-                    // Show success UI
+                    // Show the Welcome Message
                     document.getElementById('purposeStep').classList.add('hidden');
                     document.getElementById('successStep').classList.remove('hidden');
                     
-                    // Immediately trigger logout and redirect
-                    // This happens without a timer for maximum efficiency
-                    handleLogout();
+                    // Wait 10 minutes (600,000 ms) before automatic logout
+                    setTimeout(() => {
+                        handleLogout();
+                    }, 600000); 
 
                 } else {
-                    alert("Error saving log. Please try again.");
+                    alert("Error saving log.");
                     submitBtn.disabled = false;
                     submitBtn.innerText = "Log My Visit";
                 }
             } catch (err) {
-                alert("Connection error. Check your server.");
+                alert("Connection error.");
                 submitBtn.disabled = false;
                 submitBtn.innerText = "Log My Visit";
             }
         }
     </script>
-</body>
-</html>
