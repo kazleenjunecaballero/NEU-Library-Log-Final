@@ -18,6 +18,7 @@
             position: relative;
         }
 
+        /* Top Logout Button for manual exit before logging visit */
         .logout-btn {
             position: absolute;
             top: 20px;
@@ -30,6 +31,11 @@
             cursor: pointer;
             font-weight: bold;
             z-index: 2000;
+            transition: 0.3s;
+        }
+
+        .logout-btn:hover {
+            background-color: #333;
         }
 
         .form-card { 
@@ -43,22 +49,26 @@
             z-index: 1000;
         }
 
-        /* Style for the Logo */
         .neu-logo {
             width: 100px;
             margin-bottom: 20px;
         }
 
-        h2 { color: #333; margin-bottom: 20px; }
+        h2 { color: #333; margin-bottom: 20px; font-size: 22px; }
 
         select { 
             width: 100%; 
             padding: 15px; 
             border-radius: 10px; 
-            border: 1px solid #ddd; 
+            border: 2px solid #eee; 
             font-size: 16px; 
             margin-bottom: 20px; 
             background-color: #f9f9f9;
+            outline: none;
+        }
+
+        select:focus {
+            border-color: #cc0000;
         }
 
         .log-btn { 
@@ -71,6 +81,12 @@
             font-weight: bold; 
             cursor: pointer; 
             font-size: 18px;
+            transition: 0.3s;
+        }
+
+        .log-btn:hover {
+            background-color: #a30000;
+            transform: translateY(-2px);
         }
 
         .success-message h1 {
@@ -89,6 +105,7 @@
     
     <div class="form-card" id="mainCard">
         <div id="purposeStep">
+            <img src="New_Era_University.svg.png" alt="NEU Logo" class="neu-logo">
             <h2>What is your purpose?</h2>
             <select id="reason">
                 <option value="Study">Study / Research</option>
@@ -96,18 +113,20 @@
                 <option value="Clearance">Clearance / Documents</option>
                 <option value="Meeting">Group Meeting</option>
             </select>
-            <button class="log-btn" onclick="submitVisit()">Log My Visit</button>
+            <button class="log-btn" id="submitBtn" onclick="submitVisit()">Log My Visit</button>
         </div>
 
         <div id="successStep" class="hidden">
             <img src="New_Era_University.svg.png" alt="NEU Logo" class="neu-logo">
             <div class="success-message">
-                <h1>Welcome to NEU Library!</h1>
+                <h1>Success!</h1>
+                <p style="color: #666; margin-top: 10px;">Logging you out...</p>
             </div>
         </div>
     </div>
 
     <script>
+        // Clears session and returns to login page
         function handleLogout() {
             localStorage.clear();
             window.location.href = 'index.html';
@@ -116,14 +135,19 @@
         async function submitVisit() {
             const email = localStorage.getItem("userEmail");
             const reason = document.getElementById('reason').value;
+            const submitBtn = document.getElementById('submitBtn');
 
+            // Basic check to ensure user is logged in
             if (!email) {
                 window.location.href = "index.html";
                 return;
             }
 
+            // Disable button to prevent double-clicking
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Processing...";
+
             try {
-                // Ensure this matches your server's POST route
                 const res = await fetch('/api/visitors', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -131,19 +155,23 @@
                 });
 
                 if (res.ok) {
+                    // Show success UI
                     document.getElementById('purposeStep').classList.add('hidden');
                     document.getElementById('successStep').classList.remove('hidden');
                     
-                    // Auto-logout after 5 seconds to clear the screen for the next user
-                    setTimeout(() => {
-                        handleLogout();
-                    }, 5000);
+                    // Immediately trigger logout and redirect
+                    // This happens without a timer for maximum efficiency
+                    handleLogout();
 
                 } else {
-                    alert("Error saving log.");
+                    alert("Error saving log. Please try again.");
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = "Log My Visit";
                 }
             } catch (err) {
-                alert("Connection error.");
+                alert("Connection error. Check your server.");
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Log My Visit";
             }
         }
     </script>
