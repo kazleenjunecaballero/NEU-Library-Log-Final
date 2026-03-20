@@ -34,6 +34,7 @@ const visitorSchema = new mongoose.Schema({
 const Visitor = mongoose.model('Visitor', visitorSchema);
 
 // AUTH ROUTE
+// AUTHENTICATION ROUTE
 app.post('/api/auth', async (req, res) => {
     try {
         const { email } = req.body;
@@ -41,37 +42,31 @@ app.post('/api/auth', async (req, res) => {
 
         const lowerEmail = email.toLowerCase();
         
-        // Inside app.post('/api/auth', ...)
-if (lowerEmail === 'jcesperanza@neu.edu.ph') {
-    // Instead of going straight to admin.html, we go to role_selection.html
-    return res.json({ role: 'admin', redirect: 'role_selection.html' });
-}
+        // Admin Identity Check
+        if (lowerEmail === 'jcesperanza@neu.edu.ph') {
+            return res.json({ role: 'admin', redirect: 'role_selection.html' });
+        }
 
-        // 2. STRICT Format Check: Must have a DOT before @neu.edu.ph
-        // This Regex ensures: text + dot + text + @neu.edu.ph
+        // STRICT Format Check: Must have a DOT before @neu.edu.ph
         const hasDot = lowerEmail.includes('.') && lowerEmail.split('@')[0].includes('.');
         const isNEU = lowerEmail.endsWith('@neu.edu.ph');
 
         if (isNEU && hasDot) {
-            // Check if user exists
-            const existingUser = await Visitor.findOne({ email: lowerEmail });
+            // Check if user exists (finding their original registration profile)
+            const existingUser = await Visitor.findOne({ email: lowerEmail, firstName: { $exists: true } });
 
             // Blocked check
             if (existingUser && existingUser.isBlocked) {
                 return res.status(403).json({ message: 'Access Denied: Account Blocked.' });
             }
             
-            // Success: Send to correct page
             res.json({ 
                 role: 'user', 
                 redirect: existingUser ? 'visitor_form.html' : 'registration.html' 
             });
 
         } else {
-            // DENIED: This triggers if there is no dot or it's not a @neu.edu.ph email
-            res.status(403).json({ 
-                message: 'Access Denied. Use format: firstname.lastname@neu.edu.ph' 
-            });
+            res.status(403).json({ message: 'Access Denied. Use your institutional account' });
         }
     } catch (err) {
         console.error("Auth Error:", err);
@@ -79,21 +74,64 @@ if (lowerEmail === 'jcesperanza@neu.edu.ph') {
     }
 });
 
-// SAVE VISITOR (Registration)
+// NEW: CHECK ROUTE (Used by role_selection.html)
+app.get('/api/visitors/check', async (req, res) => {
+    try {
+        const { email } = req.query;
+        // Checks if this email has a completed profile (firstName exists)
+        const visitor = await Visitor.findOne({ email: email.toLowerCase(), firstName: { $exists: true } });
+        res.json({ exists: !!visitor });
+    } catch (err) {
+        res.status(500).json({ error: "Check failed" });
+    }
+});
+
+// MODIFIED: SAVE VISITOR / LOG VISIT
 app.post('/api/visitors', async (req, res) => {
     try {
-        const newEntry = new Visitor(req.body);
-        await newEntry.save();
-        res.status(201).json({ message: "Success" });
+        const { email, reason } = req.body;
+        const lowerEmail = email.toLowerCase();
+
+        // Check if a profile already exists for this email
+        const profile = await Visitor.findOne({ email: lowerEmail, firstName: { $exists: true } });
+
+        if (profile && !req.body.firstName) {
+            // RETURNING USER: Create a new log using their saved profile data
+            const newLog = new Visitor({
+                firstName: profile.firstName,
+                lastName: profile.lastName,
+                email: profile.email,
+                role: profile.role,
+                college: profile.college,
+                program: profile.program,
+                yearLevel: profile.yearLevel,
+                department: profile.department,
+                position: profile.position,
+                reason: reason, // New reason for today's visit
+                time: new Date()
+            });
+            await newLog.save();
+            return res.status(201).json({ message: "Visit Logged" });
+        } else {
+            // FIRST TIME REGISTRATION: Save everything from the registration form
+            const newEntry = new Visitor({
+                ...req.body,
+                email: lowerEmail,
+                time: new Date()
+            });
+            await newEntry.save();
+            return res.status(201).json({ message: "Profile Registered" });
+        }
     } catch (err) {
         console.error("Save Error:", err);
         res.status(500).json({ error: "Failed to save data" });
     }
 });
 
-// GET ALL VISITORS (For Admin)
+// GET ALL VISITORS (For Admin Dashboard)
 app.get('/api/visitors', async (req, res) => {
     try {
+        // Sort by time so the newest visits are at the top
         const logs = await Visitor.find().sort({ time: -1 });
         res.json(logs);
     } catch (err) {
