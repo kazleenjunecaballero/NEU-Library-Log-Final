@@ -6,7 +6,6 @@
     <style>
         body {
             font-family: 'Segoe UI', sans-serif;
-            /* Using the background from your earlier design */
             background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('background.jpg');
             background-size: cover; 
             background-position: center; 
@@ -30,7 +29,7 @@
             border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
-            z-index: 2000; /* Stays above everything */
+            z-index: 2000;
         }
 
         .form-card { 
@@ -42,7 +41,12 @@
             text-align: center; 
             box-shadow: 0 10px 25px rgba(0,0,0,0.3);
             z-index: 1000;
-            transition: all 0.3s ease;
+        }
+
+        /* Style for the Logo */
+        .neu-logo {
+            width: 100px;
+            margin-bottom: 20px;
         }
 
         h2 { color: #333; margin-bottom: 20px; }
@@ -69,10 +73,9 @@
             font-size: 18px;
         }
 
-        /* Success Message Style */
         .success-message h1 {
             color: #cc0000;
-            font-size: 32px;
+            font-size: 28px;
             font-weight: bold;
             margin: 0;
         }
@@ -96,8 +99,11 @@
             <button class="log-btn" onclick="submitVisit()">Log My Visit</button>
         </div>
 
-        <div id="successStep" class="hidden success-message">
-            <h1>Welcome to NEU Library!</h1>
+        <div id="successStep" class="hidden">
+            <img src="New_Era_University.svg.png" alt="NEU Logo" class="neu-logo">
+            <div class="success-message">
+                <h1>Welcome to NEU Library!</h1>
+            </div>
         </div>
     </div>
 
@@ -117,6 +123,7 @@
             }
 
             try {
+                // Ensure this matches your server's POST route
                 const res = await fetch('/api/visitors', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -124,11 +131,10 @@
                 });
 
                 if (res.ok) {
-                    // Update the UI without refreshing or deleting the red logout button
                     document.getElementById('purposeStep').classList.add('hidden');
                     document.getElementById('successStep').classList.remove('hidden');
                     
-                    // Optional: Automatically go back to login after 5 seconds
+                    // Auto-logout after 5 seconds to clear the screen for the next user
                     setTimeout(() => {
                         handleLogout();
                     }, 5000);
