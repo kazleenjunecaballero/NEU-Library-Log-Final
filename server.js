@@ -3,7 +3,6 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const app = express();
 
-// FIX: Moved the Render-compatible PORT to the top and removed the duplicate
 const PORT = process.env.PORT || 10000; 
 
 // Middleware
@@ -17,7 +16,7 @@ mongoose.connect(mongoURI)
     .then(() => console.log("✅ Connected to NEU Library Database"))
     .catch(err => console.error("❌ Database connection error:", err));
 
-// Visitor Schema - Matches your Registration Form exactly
+// Visitor Schema
 const visitorSchema = new mongoose.Schema({
     firstName: String,
     lastName: String,
@@ -35,6 +34,35 @@ const visitorSchema = new mongoose.Schema({
 
 const Visitor = mongoose.model('Visitor', visitorSchema);
 
+// --- NEW STATS ROUTE FOR PROFESSOR REQUIREMENTS ---
+app.get('/api/visitors/stats', async (req, res) => {
+    try {
+        const now = new Date();
+        
+        // Start of Today (00:00:00)
+        const startOfDay = new Date(now);
+        startOfDay.setHours(0, 0, 0, 0);
+
+        // Start of the Week (Sunday)
+        const startOfWeek = new Date(now);
+        const day = now.getDay(); 
+        const diff = now.getDate() - day; 
+        startOfWeek.setDate(diff);
+        startOfWeek.setHours(0, 0, 0, 0);
+
+        const [total, today, week] = await Promise.all([
+            Visitor.countDocuments(),
+            Visitor.countDocuments({ time: { $gte: startOfDay } }),
+            Visitor.countDocuments({ time: { $gte: startOfWeek } })
+        ]);
+
+        res.json({ total, today, week });
+    } catch (err) {
+        console.error("Stats Error:", err);
+        res.status(500).json({ error: "Failed to fetch statistics" });
+    }
+});
+
 // AUTHENTICATION ROUTE
 app.post('/api/auth', async (req, res) => {
     try {
@@ -44,7 +72,7 @@ app.post('/api/auth', async (req, res) => {
         const lowerEmail = email.toLowerCase();
         
         if (lowerEmail === 'jcesperanza@neu.edu.ph') {
-            return res.json({ role: 'admin', redirect: 'role_selection.html' });
+            return res.json({ role: 'admin', redirect: 'admin.html' });
         }
 
         const hasDot = lowerEmail.includes('.') && lowerEmail.split('@')[0].includes('.');
@@ -141,7 +169,7 @@ app.delete('/api/visitors/:id', async (req, res) => {
     }
 });
 
-// FIX: Keeping the version that binds to '0.0.0.0' for Render
+// Listen on '0.0.0.0' for Render compatibility
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`);
 });
