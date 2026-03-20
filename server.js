@@ -41,26 +41,38 @@ app.post('/api/auth', async (req, res) => {
 
         const lowerEmail = email.toLowerCase();
         
-        // Admin Identity Check
+        // 1. Admin Identity Check (Stays exactly as you had it)
         if (lowerEmail === 'jcesperanza@neu.edu.ph') {
             return res.json({ role: 'admin', redirect: 'admin.html' });
         } 
 
-        // Check if user exists in database
-        const existingUser = await Visitor.findOne({ email: lowerEmail });
+        // 2. The new "firstname.lastname" Check
+        // This ensures there is a dot before the @neu.edu.ph
+        const neuPattern = /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@neu\.edu\.ph$/;
+        
+        // We check two things: Does it follow the pattern AND end with @neu.edu.ph?
+        const isCorrectFormat = neuPattern.test(lowerEmail) && lowerEmail.includes('.');
 
-        if (lowerEmail.endsWith('@neu.edu.ph')) {
+        if (isCorrectFormat) {
+            // 3. Check if user exists (Important for your redirect logic)
+            const existingUser = await Visitor.findOne({ email: lowerEmail });
+
+            // 4. Keep your Blocked Account check
             if (existingUser && existingUser.isBlocked) {
                 return res.status(403).json({ message: 'Access Denied: Account Blocked.' });
             }
             
-            // If they exist, go to log form; if not, go to registration
+            // 5. Redirect logic (Registration vs Visitor Form)
             res.json({ 
                 role: 'user', 
                 redirect: existingUser ? 'visitor_form.html' : 'registration.html' 
             });
+
         } else {
-            res.status(403).json({ message: 'Please use your @neu.edu.ph email.' });
+            // This triggers if they forget the dot or use a non-NEU email
+            res.status(403).json({ 
+                message: 'Access Denied. Use NEU account' 
+            });
         }
     } catch (err) {
         console.error("Auth Error:", err);
