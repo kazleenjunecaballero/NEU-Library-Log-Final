@@ -12,11 +12,11 @@
         background-attachment: fixed;
         padding: 20px; 
         margin: 0; 
-        height: 100vh; /* Keeps the background full screen */
+        height: 100vh; 
         display: flex;
         justify-content: center;
         align-items: center;
-        overflow: hidden; /* Prevents the whole website from scrolling */
+        overflow: hidden; 
     }
 
     .dashboard { 
@@ -24,11 +24,12 @@
         padding: 30px; 
         border-radius: 12px; 
         width: 95%;
-        max-width: 1250px; 
-        height: 85vh; /* Limits dashboard height */
+        max-width: 1300px; /* Slightly wider to accommodate Purpose and Time */
+        height: 85vh; 
         display: flex;
-        flex-direction: column; /* Stacks header and table vertically */
+        flex-direction: column; 
         box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+        overflow: hidden; /* FIX: Keeps everything inside the rounded corners */
     }
 
     .header { 
@@ -38,38 +39,97 @@
         border-bottom: 3px solid #cc0000; 
         padding-bottom: 15px; 
         margin-bottom: 20px;
-        flex-shrink: 0; /* Prevents header from squishing */
+        flex-shrink: 0; 
     }
+
+    /* Added this to handle the logo and title grouping */
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .admin-logo {
+        width: 50px; /* Adjust size to fit your preference */
+        height: auto;
+    }
+
+    .logout-btn {
+        background: #333;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.3s;
+    }
+
+    .logout-btn:hover {
+        background: #000;
+    }
+</style>
+
+<div class="header">
+    <div class="header-left">
+        <img src="New_Era_University.svg.png" alt="NEU Logo" class="admin-logo">
+        <h1>NEU Library Logs</h1>
+    </div>
+    <button class="logout-btn" onclick="handleLogout()">Logout</button>
+</div>
 
     /* THE SCROLLING PART */
     .table-container { 
         width: 100%; 
-        overflow-y: auto; /* Adds the vertical scroll on the side */
-        overflow-x: auto; /* Adds horizontal scroll if columns are too wide */
-        flex-grow: 1; /* Allows the table to take up remaining space */
+        overflow-y: auto; 
+        overflow-x: auto; 
+        flex-grow: 1; 
         border: 1px solid #eee;
         border-radius: 8px;
+        position: relative; /* FIX: Context for the sticky header */
     }
 
-    table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+    table { 
+        width: 100%; 
+        border-collapse: separate; /* Required for sticky border-bottoms if needed */
+        border-spacing: 0;
+        min-width: 1100px; 
+    }
     
-    /* Sticky Header so you see column names while scrolling */
+    /* Sticky Header fix */
     th { 
         background: #cc0000; 
         color: white; 
-        padding: 12px; 
+        padding: 15px 12px; 
         text-align: left; 
         position: sticky; 
         top: 0; 
         z-index: 10;
+        box-shadow: 0 2px 2px rgba(0,0,0,0.1); /* Adds a small shadow under the red bar */
     }
 
-    td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; color: #444; }
+    td { 
+        padding: 12px; 
+        border-bottom: 1px solid #eee; 
+        font-size: 14px; 
+        color: #444; 
+    }
     
-    /* Customize the scrollbar for a cleaner look */
-    .table-container::-webkit-scrollbar { width: 8px; }
+    /* Scrollbar Styling */
+    .table-container::-webkit-scrollbar { width: 8px; height: 8px; }
     .table-container::-webkit-scrollbar-track { background: #f1f1f1; }
     .table-container::-webkit-scrollbar-thumb { background: #cc0000; border-radius: 4px; }
+    
+    /* Logout button style to match your previous design */
+    .logout-btn {
+        background: #333;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+    }
 </style>
 
 <body>
