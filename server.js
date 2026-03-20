@@ -2,7 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const app = express();
-const PORT = process.env.PORT || 3000;
+
+// FIX: Moved the Render-compatible PORT to the top and removed the duplicate
+const PORT = process.env.PORT || 10000; 
 
 // Middleware
 app.use(cors());
@@ -19,13 +21,13 @@ mongoose.connect(mongoURI)
 const visitorSchema = new mongoose.Schema({
     firstName: String,
     lastName: String,
-    email: { type: String, lowercase: true }, // Added lowercase to prevent duplicates
+    email: { type: String, lowercase: true }, 
     role: String, 
     college: String,
     program: String,
     yearLevel: String, 
     department: String,
-    position: String, // Added missing position field
+    position: String, 
     reason: String,
     time: { type: Date, default: Date.now },
     isBlocked: { type: Boolean, default: false }
@@ -33,7 +35,6 @@ const visitorSchema = new mongoose.Schema({
 
 const Visitor = mongoose.model('Visitor', visitorSchema);
 
-// AUTH ROUTE
 // AUTHENTICATION ROUTE
 app.post('/api/auth', async (req, res) => {
     try {
@@ -42,20 +43,16 @@ app.post('/api/auth', async (req, res) => {
 
         const lowerEmail = email.toLowerCase();
         
-        // Admin Identity Check
         if (lowerEmail === 'jcesperanza@neu.edu.ph') {
             return res.json({ role: 'admin', redirect: 'role_selection.html' });
         }
 
-        // STRICT Format Check: Must have a DOT before @neu.edu.ph
         const hasDot = lowerEmail.includes('.') && lowerEmail.split('@')[0].includes('.');
         const isNEU = lowerEmail.endsWith('@neu.edu.ph');
 
         if (isNEU && hasDot) {
-            // Check if user exists (finding their original registration profile)
             const existingUser = await Visitor.findOne({ email: lowerEmail, firstName: { $exists: true } });
 
-            // Blocked check
             if (existingUser && existingUser.isBlocked) {
                 return res.status(403).json({ message: 'Access Denied: Account Blocked.' });
             }
@@ -74,11 +71,10 @@ app.post('/api/auth', async (req, res) => {
     }
 });
 
-// NEW: CHECK ROUTE (Used by role_selection.html)
+// CHECK ROUTE
 app.get('/api/visitors/check', async (req, res) => {
     try {
         const { email } = req.query;
-        // Checks if this email has a completed profile (firstName exists)
         const visitor = await Visitor.findOne({ email: email.toLowerCase(), firstName: { $exists: true } });
         res.json({ exists: !!visitor });
     } catch (err) {
@@ -86,17 +82,15 @@ app.get('/api/visitors/check', async (req, res) => {
     }
 });
 
-// MODIFIED: SAVE VISITOR / LOG VISIT
+// SAVE VISITOR / LOG VISIT
 app.post('/api/visitors', async (req, res) => {
     try {
         const { email, reason } = req.body;
         const lowerEmail = email.toLowerCase();
 
-        // Check if a profile already exists for this email
         const profile = await Visitor.findOne({ email: lowerEmail, firstName: { $exists: true } });
 
         if (profile && !req.body.firstName) {
-            // RETURNING USER: Create a new log using their saved profile data
             const newLog = new Visitor({
                 firstName: profile.firstName,
                 lastName: profile.lastName,
@@ -107,13 +101,12 @@ app.post('/api/visitors', async (req, res) => {
                 yearLevel: profile.yearLevel,
                 department: profile.department,
                 position: profile.position,
-                reason: reason, // New reason for today's visit
+                reason: reason, 
                 time: new Date()
             });
             await newLog.save();
             return res.status(201).json({ message: "Visit Logged" });
         } else {
-            // FIRST TIME REGISTRATION: Save everything from the registration form
             const newEntry = new Visitor({
                 ...req.body,
                 email: lowerEmail,
@@ -128,10 +121,9 @@ app.post('/api/visitors', async (req, res) => {
     }
 });
 
-// GET ALL VISITORS (For Admin Dashboard)
+// GET ALL VISITORS
 app.get('/api/visitors', async (req, res) => {
     try {
-        // Sort by time so the newest visits are at the top
         const logs = await Visitor.find().sort({ time: -1 });
         res.json(logs);
     } catch (err) {
@@ -149,4 +141,7 @@ app.delete('/api/visitors/:id', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => console.log(`🚀 Server at http://localhost:${PORT}`));
+// FIX: Keeping the version that binds to '0.0.0.0' for Render
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+});
