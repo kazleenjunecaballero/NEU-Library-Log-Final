@@ -41,37 +41,36 @@ app.post('/api/auth', async (req, res) => {
 
         const lowerEmail = email.toLowerCase();
         
-        // 1. Admin Identity Check (Stays exactly as you had it)
-        if (lowerEmail === 'jcesperanza@neu.edu.ph') {
-            return res.json({ role: 'admin', redirect: 'admin.html' });
-        } 
+        // Inside app.post('/api/auth', ...)
+if (lowerEmail === 'jcesperanza@neu.edu.ph') {
+    // Instead of going straight to admin.html, we go to role_selection.html
+    return res.json({ role: 'admin', redirect: 'role_selection.html' });
+}
 
-        // 2. The new "firstname.lastname" Check
-        // This ensures there is a dot before the @neu.edu.ph
-        const neuPattern = /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@neu\.edu\.ph$/;
-        
-        // We check two things: Does it follow the pattern AND end with @neu.edu.ph?
-        const isCorrectFormat = neuPattern.test(lowerEmail) && lowerEmail.includes('.');
+        // 2. STRICT Format Check: Must have a DOT before @neu.edu.ph
+        // This Regex ensures: text + dot + text + @neu.edu.ph
+        const hasDot = lowerEmail.includes('.') && lowerEmail.split('@')[0].includes('.');
+        const isNEU = lowerEmail.endsWith('@neu.edu.ph');
 
-        if (isCorrectFormat) {
-            // 3. Check if user exists (Important for your redirect logic)
+        if (isNEU && hasDot) {
+            // Check if user exists
             const existingUser = await Visitor.findOne({ email: lowerEmail });
 
-            // 4. Keep your Blocked Account check
+            // Blocked check
             if (existingUser && existingUser.isBlocked) {
                 return res.status(403).json({ message: 'Access Denied: Account Blocked.' });
             }
             
-            // 5. Redirect logic (Registration vs Visitor Form)
+            // Success: Send to correct page
             res.json({ 
                 role: 'user', 
                 redirect: existingUser ? 'visitor_form.html' : 'registration.html' 
             });
 
         } else {
-            // This triggers if they forget the dot or use a non-NEU email
+            // DENIED: This triggers if there is no dot or it's not a @neu.edu.ph email
             res.status(403).json({ 
-                message: 'Access Denied. Use NEU account' 
+                message: 'Access Denied. Use format: firstname.lastname@neu.edu.ph' 
             });
         }
     } catch (err) {

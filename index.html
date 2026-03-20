@@ -58,37 +58,37 @@
     </div>
 
     <script>
-        async function handleLogin() {
-            const emailInput = document.getElementById('userEmail');
-            const email = emailInput.value.trim();
-            
-            if (!email) {
-                return alert("Please enter your email.");
-            }
+    async function handleLogin() {
+        const emailInput = document.getElementById('userEmail');
+        const email = emailInput.value.trim();
 
-            try {
-                const res = await fetch('/api/auth', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email })
-                });
-                
-                const data = await res.json();
-
-                if (res.ok) {
-                    // Save email so other pages know who is logged in
-                    localStorage.setItem("userEmail", email.toLowerCase());
-                    
-                    // The server tells us where to go (admin.html, registration.html, or visitor_form.html)
-                    window.location.href = data.redirect; 
-                } else {
-                    alert(data.message || "Invalid Email");
-                }
-            } catch (err) {
-                console.error("Login Error:", err);
-                alert("Server connection failed. Make sure your server is running (node server.js).");
-            }
+        if (!email) {
+            alert("Please enter your email.");
+            return;
         }
-    </script>
-</body>
-</html>
+
+        try {
+            const res = await fetch('/api/auth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                // Save email so registration and visitor forms can use it
+                localStorage.setItem("userEmail", email.toLowerCase());
+                
+                // Redirect based on what the server decided (admin, register, or log visit)
+                window.location.href = data.redirect; 
+            } else {
+                // This will now show "Access Denied. Use format: firstname.lastname@neu.edu.ph"
+                alert(data.message || "Invalid Email");
+            }
+        } catch (err) {
+            console.error("Login Error:", err);
+            alert("Server connection failed. Make sure your server is running!");
+        }
+    }
+</script>
